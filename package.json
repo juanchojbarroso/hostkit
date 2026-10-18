@@ -1,0 +1,13 @@
+{
+  "name": "hostkit-monorepo",
+  "private": true,
+  "description": "Framework-agnostic design system built with Lit Web Components",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test"
+  }
+}
