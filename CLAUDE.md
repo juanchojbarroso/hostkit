@@ -21,7 +21,8 @@ note "hostkit - project brief".
 Full list in `docs/adr/README.md`. In short:
 
 - pnpm workspaces, no Turborepo yet; `packages/*` libraries, `apps/*` consumers
-- `@hostkit/tokens` (hand-written CSS) + `@hostkit/components` (one
+- npm scope `@hostkit-ui` (`@hostkit` is taken; product name stays hostkit)
+- `@hostkit-ui/tokens` (hand-written CSS) + `@hostkit-ui/components` (one
   package, one subpath export per component, plus `all.js`)
 - Vite library build: `dist/` for npm (Lit external), `cdn/` (Lit bundled)
 - Vitest browser mode + Playwright; axe-core in component tests

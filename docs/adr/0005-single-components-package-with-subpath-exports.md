@@ -6,6 +6,10 @@ deciders: Juan Barroso
 
 # 0005. Single components package with subpath exports
 
+> **Amended by [ADR-0010](0010-publish-under-the-hostkit-ui-npm-scope.md):**
+> the `@hostkit` scope is taken. Read `@hostkit/` as `@hostkit-ui/`. The
+> decision below is unchanged.
+
 ## Context and problem statement
 
 Import paths are a public contract: once consumers write
