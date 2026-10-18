@@ -17,3 +17,4 @@ supersede it with a new one.
 | [0008](0008-eslint-prettier-with-lit-rules.md) | ESLint + Prettier + Lit/WC rules | accepted |
 | [0009](0009-public-repository-from-the-start.md) | Public repository from the start | accepted |
 | [0010](0010-publish-under-the-hostkit-ui-npm-scope.md) | Publish under the `@hostkit-ui` npm scope | accepted |
+| [0011](0011-legacy-decorators-until-oxc-supports-standard.md) | Legacy decorators until Oxc supports standard | accepted |

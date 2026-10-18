@@ -27,4 +27,5 @@ Full list in `docs/adr/README.md`. In short:
 - Vite library build: `dist/` for npm (Lit external), `cdn/` (Lit bundled)
 - Vitest browser mode + Playwright; axe-core in component tests
 - ESLint (typescript-eslint, lit, wc) + Prettier + lit-analyzer
+- Legacy decorators (`experimentalDecorators`), see ADR-0011
 - Node 24 LTS; public repo
