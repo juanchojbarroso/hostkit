@@ -18,3 +18,5 @@ supersede it with a new one.
 | [0009](0009-public-repository-from-the-start.md) | Public repository from the start | accepted |
 | [0010](0010-publish-under-the-hostkit-ui-npm-scope.md) | Publish under the `@hostkit-ui` npm scope | accepted |
 | [0011](0011-legacy-decorators-until-oxc-supports-standard.md) | Legacy decorators until Oxc supports standard | accepted |
+| [0012](0012-public-api-contract-and-breaking-change-policy.md) | Public API contract and breaking-change policy | accepted |
+| [0013](0013-theme-selection-data-theme-over-media-query.md) | Theme selection: `data-theme` overrides the OS preference | accepted |
