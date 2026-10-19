@@ -1,31 +1,174 @@
-# hostkit
+# CLAUDE.md
 
-A framework-agnostic design system: Lit Web Components, tag prefix `hk-`.
-It is a Breakable Toy for growing into a principal engineer. The learning
-is the deliverable.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Project brief (scope, milestones, definition of done): Juan's Obsidian
-note "hostkit - project brief".
+## What this is
+
+hostkit is a framework-agnostic design system: Lit Web Components, tag
+prefix `hk-`, npm scope `@hostkit-ui`. It is a **Breakable Toy** for
+growing into a principal engineer, so the learning is the deliverable.
+Breaking things on purpose, and writing down why, is part of the job.
+
+The name has two meanings: `:host` is how a component styles itself in
+Shadow DOM, and the *host* is whatever app consumes the kit. The kit has
+to work in any host.
+
+Scope, milestones and the definition of done live in Juan's Obsidian
+note "hostkit - project brief", which is outside the repo. The parts
+that shape day-to-day work are summarised below.
 
 ## Working agreement
 
-- **Decide together.** Never choose a tool, API shape, or architecture
-  alone. Present the options, the trade-offs, a recommendation, and the
-  principle behind it; Juan decides.
-- **Record every decision** as an ADR in `docs/adr` (MADR, see ADR-0001).
-  Record every failure worth keeping in `LEARNINGS.md`.
-- Mechanical work inside an agreed decision can proceed without asking.
+- **Decide together.** Never choose a tool, an API shape or an
+  architecture alone. Explain the problem in plain language with an
+  example, then present the options, the trade-offs, a recommendation
+  and the principle behind it. Juan decides.
+- **Record every decision** as an ADR in `docs/adr` (MADR). Copy
+  `docs/adr/template.md`, number it sequentially, and add a row to
+  `docs/adr/README.md`. Never edit an accepted ADR's decision; write a
+  new ADR that supersedes it. Every ADR ends with a `## Lesson` section.
+- **Record every failure worth keeping** in `LEARNINGS.md`. Format:
+  date · tried · broke · why · next time. Choices go in ADRs; breakages
+  go in LEARNINGS.
+- Settle a risky toolchain bet with a timeboxed spike on a `spike/*`
+  branch before building on it (see ADR-0011).
+- Mechanical work inside an agreed decision can go ahead without asking.
+- Commits follow Conventional Commits (`.claude/rules/conventional-commits.md`).
 
-## Current decisions
+## Current state
 
-Full list in `docs/adr/README.md`. In short:
+So far the repo holds only the decisions (ADR-0001 to 0013) and the
+pnpm workspace skeleton. `packages/` and `apps/` don't exist yet. The
+root `package.json` has `pnpm build` and `pnpm test`, which run
+`pnpm -r build` and `pnpm -r test` across workspaces. Add the real
+per-package commands here (lint, a single test, the CDN build) as they
+are created.
 
-- pnpm workspaces, no Turborepo yet; `packages/*` libraries, `apps/*` consumers
-- npm scope `@hostkit-ui` (`@hostkit` is taken; product name stays hostkit)
-- `@hostkit-ui/tokens` (hand-written CSS) + `@hostkit-ui/components` (one
-  package, one subpath export per component, plus `all.js`)
-- Vite library build: `dist/` for npm (Lit external), `cdn/` (Lit bundled)
-- Vitest browser mode + Playwright; axe-core in component tests
-- ESLint (typescript-eslint, lit, wc) + Prettier + lit-analyzer
-- Legacy decorators (`experimentalDecorators`), see ADR-0011
-- Node 24 LTS; public repo
+Toolchain: Node 24 LTS (`.nvmrc`, with `engine-strict=true` in `.npmrc`,
+so other Node versions fail to install) and pnpm 10 (`packageManager`).
+
+## Architecture (as decided, see `docs/adr/README.md`)
+
+**Layout.** pnpm workspaces, no Turborepo yet (ADR-0002).
+`packages/*` holds the published libraries and `apps/*` holds the
+consumers that prove them:
+
+- `@hostkit-ui/tokens`: hand-written CSS custom properties, usable
+  without any components (ADR-0003). Three layers in separate files:
+  primitive (`blue-500`) → semantic (`--hk-color-action-primary`, which
+  references primitives with `var()`) → component. **Components consume
+  semantic tokens only.** Component tokens (`--hk-button-bg`) live inside
+  each component, not in this package.
+- `@hostkit-ui/components`: one package. `exports` has one subpath per
+  component (`./button.js`, …) plus `./all.js` (ADR-0005). `sideEffects`
+  must list the files that call `customElements.define()`, or bundlers
+  drop them.
+
+**Theming** (ADR-0013). With no attribute set, `prefers-color-scheme`
+applies, scoped to `:root:not([data-theme="light"])`.
+`data-theme="light|dark"` on the root always wins. The dark values are
+declared twice (in the media query and under the attribute selector);
+keep each set in one block so they can't drift. Themes are different
+token values, never different components.
+
+**Build** (ADR-0006). Vite library mode, two outputs:
+- `dist/`: ESM, `preserveModules`, Lit **external**. `exports` points
+  here. Types come from `tsc --emitDeclarationOnly`.
+- `cdn/`: Lit bundled, minified, one file per entry plus `all.js`. It
+  must load from an exact-version jsDelivr/unpkg URL.
+Check the `preserveModules` output by hand. Never ship two copies of Lit
+to a bundler user.
+
+**Decorators** (ADR-0011). Vite 8's Oxc transformer lowers only legacy
+decorators, so the project uses:
+- `tsconfig`: `experimentalDecorators: true`, `useDefineForClassFields: false`
+- `vite.config`: `oxc: { decorator: { legacy: true } }`
+
+Removing `useDefineForClassFields: false` silently breaks every reactive
+property, so a test must assert that a property change re-renders.
+lit-analyzer needs TypeScript 5.9; the TypeScript 7 npm package has no
+compiler API. Don't write `@property() accessor x` (standard syntax).
+
+**Tests** (ADR-0007). Vitest browser mode with the Playwright provider.
+Chromium locally; Chromium, Firefox and WebKit in CI. axe-core runs
+inside the component tests. Don't use happy-dom or jsdom. To reproduce
+a WebKit-only CI failure, run `--browser=webkit`.
+
+**Lint** (ADR-0008). ESLint (typescript-eslint, `eslint-plugin-lit`,
+`eslint-plugin-wc`) + Prettier + lit-analyzer.
+
+## Public API contract (ADR-0012)
+
+Every consumer-facing surface is a contract, and it maps onto the
+Custom Elements Manifest (`custom-elements.json`, generated on every
+build):
+
+- Events: `CustomEvent`, `hk-` kebab-case names (`hk-change`), with
+  `bubbles: true, composed: true`. Set `cancelable` only when there is a
+  default action to skip. The element's properties are the source of
+  truth; `detail` is only a convenience copy.
+- Every primitive property has a kebab-case attribute
+  (`helpText` ↔ `help-text`). Booleans and state that CSS uses (`variant`,
+  `disabled`, `checked`) reflect. Objects and arrays are property-only.
+- Styling hooks: `--hk-<component>-*` custom properties plus a short,
+  documented list of `::part()`s. The internal shadow DOM is not API.
+- **Breaking** (needs a major) means removing, renaming, or changing the
+  type or meaning of any of these: a tag, attribute, property, method,
+  event, `detail` field, slot, part, custom property, token, default
+  value, reflection, `exports` subpath, supported browser, or minimum
+  tested framework version. When in doubt, treat a change as breaking.
+- Changesets: every PR that changes a published package includes a
+  changeset with a consumer-facing note. During `0.x` (until the M2 MVP)
+  a breaking change is a `minor` bump whose note starts with
+  `BREAKING:`. Deprecation means a `@deprecated` JSDoc tag, one
+  `console.warn` per element type, and a documented replacement. Removal
+  comes no earlier than the next major.
+
+## Platform requirements (from the brief)
+
+- No framework dependency in `packages/components`. The same element
+  must work **unchanged** in React, Vue and plain HTML. React/Vue wrapper
+  packages are out of scope unless interop friction proves they're
+  needed, and that finding goes in LEARNINGS.
+- Two micro-frontends on one page must be able to run different major
+  versions (the custom-element registry clash, milestone M3).
+- Out of scope: backend, auth, SSR, i18n, native mobile.
+
+**Definition of done for every component:** API documented (properties,
+attributes and which ones reflect, events, slots, parts, custom
+properties); a Storybook story plus a usage example in each consumer;
+keyboard-operable with visible focus and correct roles; 0 axe
+violations; WCAG 2.2 AA contrast in both themes; themed only through
+tokens, with no hard-coded colours; behaviour and event tests; under the
+gzip size budget (checked in CI); a changeset with the right bump.
+
+## First consumer and milestones
+
+Shopping Notes is the app that proves the kit. Its React shell (Vite)
+hosts a Vue micro-frontend loaded at runtime, and a plain-HTML share
+widget loads hostkit from the CDN. Data is in `localStorage`. **v0.1
+contains only the components the MVP stories need**; everything else
+waits until a story asks for it.
+
+| Milestone | Scope |
+|---|---|
+| M1 Foundation | Monorepo, tokens (light/dark), `hk-button`, `hk-text-field`, `hk-checkbox`; Vite build; used from React **and** Vue; Changesets release from CI. Target Thu 2026-10-22 |
+| M2 MVP | The rest of v0.1; Shopping Notes stories 1–8; Storybook deployed; `1.0.0` |
+| M3 Platform | Vue runtime micro-frontend; CDN share widget; two majors on one page |
+| M4 Breaking change | Expand-and-contract rename (e.g. `variant="danger"` → `tone="critical"`) |
+| M5 AI software factory | `AGENTS.md`, manifest fed to an agent, a codemod for the M4 migration |
+
+Open item from ADR-0012: check how React handles custom-element events
+and properties in the walking skeleton, and record the result in
+`LEARNINGS.md`.
+
+## Reference projects
+
+Read how these solved a problem before solving it yourself. Copy
+patterns, not code:
+- Red Hat Design System (`@rhds/elements`): token layers, theming,
+  framework usage docs, repo structure
+- Web Awesome / Shoelace 2.x: component API shape, form-associated
+  controls, CDN loading
+- Spectrum Web Components: Changesets release flow and coexisting
+  versions
