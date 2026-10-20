@@ -172,3 +172,17 @@ patterns, not code:
   controls, CDN loading
 - Spectrum Web Components: Changesets release flow and coexisting
   versions
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live in GitHub Issues on `juanchojbarroso/hostkit` (via `gh`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default roles, each label named after its role (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` (created lazily) and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
