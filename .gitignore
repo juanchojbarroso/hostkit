@@ -1,5 +1,6 @@
 node_modules/
 dist/
+cdn/
 storybook-static/
 coverage/
 *.log
