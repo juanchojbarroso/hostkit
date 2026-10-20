@@ -3,6 +3,7 @@ dist/
 cdn/
 storybook-static/
 coverage/
+.vitest/
 *.log
 .DS_Store
 .env*

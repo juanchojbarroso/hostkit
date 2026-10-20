@@ -1,0 +1,14 @@
+/*
+ * Primitive layer: the raw palette. Private (ADR-0014): the leading
+ * underscore marks these as not public API. Use semantic tokens instead.
+ */
+:root {
+  --_hk-blue-300: #93c5fd;
+  --_hk-blue-700: #1d4ed8;
+  --_hk-gray-50: #f9fafb;
+  --_hk-gray-100: #f3f4f6;
+  --_hk-gray-800: #1f2937;
+  --_hk-gray-900: #111827;
+  --_hk-gray-950: #030712;
+  --_hk-white: #ffffff;
+}

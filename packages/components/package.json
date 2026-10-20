@@ -1,0 +1,24 @@
+{
+  "name": "@hostkit-ui/components",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Framework-agnostic hostkit components, built with Lit",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lit": "^3.3.0"
+  },
+  "devDependencies": {
+    "@hostkit-ui/tokens": "workspace:*",
+    "@vitest/browser-playwright": "^5.0.5",
+    "axe-core": "^4.14.0",
+    "playwright": "^1.64.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

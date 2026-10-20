@@ -1,0 +1,32 @@
+/*
+ * Semantic layer: public tokens, named by meaning (ADR-0014).
+ *
+ * Theme precedence (ADR-0013): with no attribute, the OS preference
+ * applies; data-theme="light" or "dark" on the root always wins. The dark
+ * values appear twice below; keep the two blocks identical.
+ */
+:root {
+  --hk-color-action-primary: var(--_hk-blue-700);
+  --hk-color-action-primary-text: var(--_hk-white);
+  --hk-color-action-secondary: var(--_hk-gray-100);
+  --hk-color-action-secondary-text: var(--_hk-gray-900);
+  --hk-color-focus-ring: var(--_hk-blue-700);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --hk-color-action-primary: var(--_hk-blue-300);
+    --hk-color-action-primary-text: var(--_hk-gray-950);
+    --hk-color-action-secondary: var(--_hk-gray-800);
+    --hk-color-action-secondary-text: var(--_hk-gray-50);
+    --hk-color-focus-ring: var(--_hk-blue-300);
+  }
+}
+
+:root[data-theme='dark'] {
+  --hk-color-action-primary: var(--_hk-blue-300);
+  --hk-color-action-primary-text: var(--_hk-gray-950);
+  --hk-color-action-secondary: var(--_hk-gray-800);
+  --hk-color-action-secondary-text: var(--_hk-gray-50);
+  --hk-color-focus-ring: var(--_hk-blue-300);
+}

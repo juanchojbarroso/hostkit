@@ -1,0 +1,6 @@
+/*
+ * @hostkit-ui/tokens: the only public entry point (ADR-0014).
+ * The layer files it imports are private and may change without notice.
+ */
+@import './src/primitives.css';
+@import './src/semantic.css';

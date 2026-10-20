@@ -57,3 +57,20 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   adopt, not only examples. Check `npm profile get` (`tfa`) before any
   first publish. Rehearse any external, hard-to-undo flow on a probe
   first.
+
+## 2026-10-20 · A filter in my own test hid the bug it was meant to catch
+
+- **Tried:** `hk-button` with `pointer-events: none` when disabled, and a
+  test that counted clicks on `document`.
+- **Broke:** the forced clicks fell through to the page behind the
+  button, so I filtered the test to count only clicks whose path included
+  the button. That made it pass. Code review then found the real bug:
+  a disabled button inside a clickable row passed the click to the row,
+  which a native disabled `<button>` never does.
+- **Why:** I changed the test to fit the behaviour instead of asking
+  whether the behaviour was right. The filter defined the bug away.
+- **Next time:** when a test fails in a surprising way, write down the
+  user-visible scenario before touching the assertion. Test with a
+  realistic parent (a clickable row), not an abstract `document`
+  listener. Also: an ancestor's capture-phase listener still sees the
+  click. A custom element can't stop that; it's documented on `disabled`.

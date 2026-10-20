@@ -1,0 +1,18 @@
+{
+  "name": "@hostkit-ui/tokens",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Design tokens for hostkit, as CSS custom properties",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    "./tokens.css": "./tokens.css"
+  },
+  "files": [
+    "tokens.css",
+    "src"
+  ],
+  "sideEffects": [
+    "*.css"
+  ]
+}
