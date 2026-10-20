@@ -35,3 +35,25 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   actually produced. Upgrading a toolchain major (Vite 7→8, TS 5→7) means
   re-checking every assumption. See ADR-0011 and branch
   `spike/standard-decorators`.
+
+## 2026-10-20 · The release probe caught three problems before the real packages
+
+- **Tried:** a throwaway `@hostkit-ui/release-probe` through the whole
+  external release flow (ADR-0016): manual `0.0.0`, `npm trust`, then
+  `changesets/action@v2` publishing `0.0.1` from CI with OIDC.
+- **Broke, 1:** the first workflow run failed: `changesets/action` v2
+  renamed the `publish` input to `publish-script`. Most examples online
+  still use the old name.
+- **Broke, 2:** the manual publish returned `E403 Two-factor
+  authentication ... is required`. 2FA was off on the npm account.
+  With trusted publishing, CI no longer needs a token, so the
+  account is the remaining way to publish, and it was the unprotected one.
+- **Broke, 3 (a warning):** `pnpm/action-setup@v4` targets Node 20, which
+  GitHub is retiring; the runner forced it onto Node 24. Fixed with `@v6`.
+- **Why I found them cheaply:** each failure hit a disposable package, so
+  no real version number was burned and the 48-hour trust clock wasn't
+  wasted on the real packages.
+- **Next time:** read an action's release notes for every major you
+  adopt, not only examples. Check `npm profile get` (`tfa`) before any
+  first publish. Rehearse any external, hard-to-undo flow on a probe
+  first.
