@@ -6,6 +6,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "build": "pnpm run build:cdn",
+    "build:cdn": "node scripts/build-cdn.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -20,5 +22,8 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
-  }
+  },
+  "files": [
+    "cdn"
+  ]
 }

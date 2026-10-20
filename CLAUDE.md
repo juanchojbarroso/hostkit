@@ -37,12 +37,29 @@ that shape day-to-day work are summarised below.
 
 ## Current state
 
-So far the repo holds only the decisions (ADR-0001 to 0013) and the
-pnpm workspace skeleton. `packages/` and `apps/` don't exist yet. The
-root `package.json` has `pnpm build` and `pnpm test`, which run
-`pnpm -r build` and `pnpm -r test` across workspaces. Add the real
-per-package commands here (lint, a single test, the CDN build) as they
-are created.
+Phase 0 (the walking skeleton, issue #1) is in progress. Packages:
+`@hostkit-ui/tokens`, `@hostkit-ui/components` (only `hk-button`), and
+`@hostkit-ui/release-probe` (throwaway, deprecated). Apps:
+`apps/share-widget` (plain HTML via the CDN build). The real packages
+stay `"private": true` until they are bootstrapped on npm (#9, #10),
+because `release.yml` publishes every unpublished public package.
+
+Commands (run from the repo root):
+
+- `pnpm build` / `pnpm test`: every workspace (`pnpm -r`)
+- `pnpm --filter @hostkit-ui/components test`: component tests (Vitest
+  browser mode); one file: `... test src/button.test.ts`; one test:
+  `... test -t "disabled"`
+- `pnpm --filter @hostkit-ui/components typecheck`
+- `pnpm --filter @hostkit-ui/components build:cdn`: `cdn/` only
+- `pnpm --filter share-widget test`: builds the CDN files, then runs the
+  Playwright smoke tests. `HOSTKIT_TOKENS_DIR` / `HOSTKIT_COMPONENTS_DIR`
+  serve other copies of the packages (e.g. an unpacked tarball);
+  `HOSTKIT_TOKENS_BASE` / `HOSTKIT_COMPONENTS_BASE` point the page at
+  other URLs (e.g. jsDelivr). See `apps/share-widget/server.mjs`.
+- `pnpm changeset`: add a changeset (see `.changeset/README.md`)
+
+Add lint commands here when they exist (#7).
 
 Toolchain: Node 24 LTS (`.nvmrc`, with `engine-strict=true` in `.npmrc`,
 so other Node versions fail to install) and pnpm 10 (`packageManager`).

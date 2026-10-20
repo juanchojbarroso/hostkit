@@ -4,6 +4,8 @@ cdn/
 storybook-static/
 coverage/
 .vitest/
+test-results/
+playwright-report/
 *.log
 .DS_Store
 .env*

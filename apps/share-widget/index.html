@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Share this list</title>
+    <!--
+      Integrator snippet: hostkit from a CDN, no build tool.
+      The server fills in the two base URLs (see server.mjs).
+    -->
+    <link rel="stylesheet" href="%HOSTKIT_TOKENS_BASE%/tokens.css" />
+    <script type="module" src="%HOSTKIT_COMPONENTS_BASE%/cdn/button.js"></script>
+  </head>
+  <body>
+    <main>
+      <h1>Weekend groceries</h1>
+      <hk-button id="share">Share list</hk-button>
+      <hk-button id="copy" variant="secondary" disabled>Copy link</hk-button>
+      <p>Shared <output id="shares">0</output> times</p>
+    </main>
+    <script type="module">
+      const shares = document.querySelector('#shares');
+      document.querySelector('#share').addEventListener('click', () => {
+        shares.value = String(Number(shares.value) + 1);
+      });
+      document.querySelector('#copy').addEventListener('click', () => {
+        shares.value = 'copy should never fire while disabled';
+      });
+    </script>
+  </body>
+</html>
