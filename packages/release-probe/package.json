@@ -1,0 +1,19 @@
+{
+  "name": "@hostkit-ui/release-probe",
+  "version": "0.0.0",
+  "description": "Throwaway package that rehearses the hostkit release flow. Do not install.",
+  "license": "MIT",
+  "type": "module",
+  "exports": "./index.js",
+  "files": [
+    "index.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juanchojbarroso/hostkit.git",
+    "directory": "packages/release-probe"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
