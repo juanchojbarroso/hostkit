@@ -45,6 +45,10 @@ Chosen: **Vite library mode with two outputs**:
   Rollup is doing, so `preserveModules` output must be checked by hand
 - Bad: every CDN bundle carries its own Lit. That costs bytes, and it
   matters for M3 (version coexistence).
+- Validation: CI runs publint on the packed tarball, and the consumer
+  smoke tests (ADR-0015) fail if Lit leaks into `dist/`, a bare
+  specifier survives in `cdn/`, or `sideEffects` lets a bundler drop an
+  element definition
 - Revisit when: the CDN bundle exceeds its size budget, or import maps
   become the recommended CDN pattern for consumers
 

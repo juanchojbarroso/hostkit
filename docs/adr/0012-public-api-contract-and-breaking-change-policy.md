@@ -41,8 +41,9 @@ is indistinguishable from the inner `<input>`'s own), and makes our events
 obvious in DevTools and in consumer code. Kebab-case works as-is in Vue
 (`@hk-change`) and with `addEventListener`. Cost: generic form libraries
 that listen for native `change` need an adapter. React's handling of
-custom element events must be checked in the walking skeleton; record the
-result in `LEARNINGS.md`.
+custom element events must be checked in Phase 1 with `hk-checkbox`
+(`hk-change`), since the walking skeleton's `hk-button` uses native
+`click` only; record the result in `LEARNINGS.md`.
 
 ### Q2. Event shape
 

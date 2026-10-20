@@ -20,3 +20,6 @@ supersede it with a new one.
 | [0011](0011-legacy-decorators-until-oxc-supports-standard.md) | Legacy decorators until Oxc supports standard | accepted |
 | [0012](0012-public-api-contract-and-breaking-change-policy.md) | Public API contract and breaking-change policy | accepted |
 | [0013](0013-theme-selection-data-theme-over-media-query.md) | Theme selection: `data-theme` overrides the OS preference | accepted |
+| [0014](0014-token-contract-private-primitives-and-one-entry-point.md) | Token contract: private primitives, system-colour fallback, one entry point | accepted |
+| [0015](0015-supported-frameworks-browsers-and-lit-dependency.md) | Supported frameworks, browsers and the Lit dependency | accepted |
+| [0016](0016-publish-from-ci-with-npm-trusted-publishing.md) | Publish from CI with npm trusted publishing, independent versions | accepted |
