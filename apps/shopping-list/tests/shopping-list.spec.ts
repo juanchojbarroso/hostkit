@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
-
-// The dev server from playwright.config.ts. Vue only warns in development.
-const devServer = 'http://localhost:4331/';
+import type { HkButton } from '@hostkit-ui/components/button.js';
+import { devServer } from './servers.js';
 
 test('Vue resolves hk-button as a custom element, not a component', async ({ page }) => {
   const warnings: string[] = [];
@@ -10,6 +9,9 @@ test('Vue resolves hk-button as a custom element, not a component', async ({ pag
   });
   await page.goto(devServer);
   await expect(page.locator('hk-button#add-item')).toHaveText('Add item');
+  // Guard against a silent pass: a production-mode Vue logs no warnings at
+  // all. Vue's development build defines this global; production doesn't.
+  expect(await page.evaluate(() => '__VUE_HMR_RUNTIME__' in globalThis)).toBe(true);
   expect(warnings.filter((text) => text.includes('Failed to resolve component'))).toEqual([]);
 });
 
@@ -34,8 +36,6 @@ test('the production build upgrades hk-button and runs exactly one copy of Lit',
   });
   expect(copies).toEqual({ litElement: 1, reactiveElement: 1, litHtml: 1 });
 });
-
-type HkButton = HTMLElement & { variant: string; disabled: boolean };
 
 test('a bound variant sets the element property, and the attribute reflects', async ({
   page,

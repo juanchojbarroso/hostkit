@@ -1,9 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-
-const port = 4330;
-// Vue strips its warnings from production builds, so the one test that
-// listens for "Failed to resolve component" needs the dev server.
-const devPort = 4331;
+import { devPort, previewPort } from './tests/servers.js';
 
 // Chromium locally, all three engines in CI (ADR-0007).
 const browsers = process.env.CI
@@ -12,17 +8,18 @@ const browsers = process.env.CI
 
 export default defineConfig({
   testDir: 'tests',
-  use: { baseURL: `http://localhost:${port}` },
+  use: { baseURL: `http://localhost:${previewPort}` },
   projects: browsers.map((name) => ({ name, use: { ...devices[name] } })),
   webServer: [
     {
       // The production build, not the dev server: tree-shaking and
       // dependency deduplication only happen here.
-      command: `vite preview --port ${port} --strictPort`,
-      url: `http://localhost:${port}`,
+      command: `vite preview --port ${previewPort} --strictPort`,
+      url: `http://localhost:${previewPort}`,
       reuseExistingServer: false,
     },
     {
+      // Only for Vue's dev-only warnings (see tests/servers.ts).
       command: `vite --port ${devPort} --strictPort`,
       url: `http://localhost:${devPort}`,
       reuseExistingServer: false,
