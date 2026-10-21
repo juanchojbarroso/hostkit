@@ -6,6 +6,7 @@ import lit from 'eslint-plugin-lit';
 import wc from 'eslint-plugin-wc';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import vue from 'eslint-plugin-vue';
 
 export default defineConfig(
   globalIgnores([
@@ -34,6 +35,15 @@ export default defineConfig(
   {
     files: ['packages/components/src/**', 'apps/*/src/**'],
     languageOptions: { globals: globals.browser },
+  },
+
+  // Vue single-file components (apps/shopping-list): the error-prevention
+  // set only, since Prettier owns formatting. vue-eslint-parser
+  // reads the template; <script lang="ts"> goes to the TypeScript parser.
+  ...vue.configs['flat/essential'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: { parserOptions: { parser: tseslint.parser } },
   },
 
   // Lit and Web Component rules for the components themselves.

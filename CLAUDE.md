@@ -153,7 +153,9 @@ keyboard navigation is on in System Settings, so a local WebKit run can
 fail where Linux CI passes.
 
 **Lint** (ADR-0008). ESLint (typescript-eslint `strict`, `eslint-plugin-lit`,
-`eslint-plugin-wc` best-practice) + Prettier + lit-analyzer. Both
+`eslint-plugin-wc` best-practice, `eslint-plugin-vue` `flat/essential` for
+`.vue` files) + Prettier + lit-analyzer. ESLint rules catch bugs only;
+Prettier owns formatting. Both
 typescript-eslint and lit-analyzer need TypeScript 5.9 (TypeScript 7 has
 no compiler API): the root `typescript ~5.9` serves typescript-eslint's
 peer, and root `pnpm.packageExtensions` gives it to lit-analyzer. The
