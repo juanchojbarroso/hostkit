@@ -222,3 +222,27 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   check the fix keeps them. Here `preserveEntrySignatures:
   'allow-extension'` keeps `hk-button` in `cdn/button.js` itself, and
   `all.js` imports it by its public name (ADR-0017).
+
+## 2026-10-21 · Defining `hk-button` after Vue mounts kept the suite green
+
+- **Tried:** checking the README's Vue import-order advice (#13) by
+  breaking it on purpose: `createApp(App).mount('#app')` first, then
+  `import('@hostkit-ui/components/button.js')`.
+- **Broke, 1:** all six shopping-list smoke tests still passed. The app
+  starts the archive button *disabled*. Vue set it as an attribute on the
+  un-upgraded element, any value of which means disabled, so Lit read
+  `true` on upgrade and reflected it back as `disabled=""`. Every later
+  toggle went through the property, because by then the element had one.
+- **Broke, 2:** with the button starting *enabled* (`:disabled="false"`),
+  the real bug showed: Vue set `disabled="false"` on the un-upgraded
+  element, Lit upgraded it to `disabled = true`, and the button stayed
+  disabled; a click did nothing. Vue patches only on change, so nothing
+  corrected it. The same app with the import before `mount()` gave
+  `disabled = false` and the click worked.
+- **Why:** the bug lives only in the initial render of an un-upgraded
+  element, and only for a `false` boolean. A fixture that starts `true`
+  can't see it, because Lit's reflection repairs the value.
+- **Next time:** for every "must happen before X" rule, break the order
+  with the starting state the rule protects (here, a `false` boolean),
+  not the app's current one. The smoke suite has no test for this yet;
+  it's an open item in the #13 PR.
