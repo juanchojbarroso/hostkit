@@ -93,3 +93,27 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   attributes, and re-renders update them. `onClick` works because
   `click` is native. Custom events (`hk-change`) are still unchecked:
   Phase 1, with `hk-checkbox`.
+
+## 2026-10-21 · Vue's custom-element warning doesn't exist in production
+
+- **Tried:** a Playwright test that fails if Vue logs "Failed to resolve
+  component: hk-button", run first *without*
+  `compilerOptions.isCustomElement`, against the production build like
+  every other smoke test.
+- **Broke:** the test passed. It should have failed. Vue strips its
+  warnings from production builds, so the console was silent either way.
+  The built bundle still called `resolveComponent("hk-button")`; it just
+  fell back to the tag name without a word.
+- **Why:** "test the production build" was the right rule for
+  tree-shaking and Lit deduplication, but a warning is a development
+  feature. I applied the rule without asking what the test listens for.
+- **Next time:** watch a new test fail before trusting it. When the
+  signal is a dev-only one (Vue warnings, Lit dev mode), test it where it
+  exists: the shopping-list warning test runs on the Vite dev server,
+  everything else on `vite preview`.
+- **Also learned:** a second Lit only appears with an incompatible major.
+  Adding `lit@3.2.1` to the app still ran one copy (it reuses
+  `lit-element` 4.2.2); `lit@2.8.0` made the one-copy test fail with
+  two of each. And Vue sets `disabled` as a **property**: with
+  `:disabled.attr`, `false` becomes `disabled="false"` and the button
+  stays disabled, which the reactive-disabled test catches.

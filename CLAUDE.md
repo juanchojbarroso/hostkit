@@ -40,8 +40,9 @@ that shape day-to-day work are summarised below.
 Phase 0 (the walking skeleton, issue #1) is in progress. Packages:
 `@hostkit-ui/tokens`, `@hostkit-ui/components` (only `hk-button`), and
 `@hostkit-ui/release-probe` (throwaway, deprecated). Apps:
-`apps/share-widget` (plain HTML via the CDN build) and
-`apps/shopping-shell` (React 19 via the npm build). The real packages
+`apps/share-widget` (plain HTML via the CDN build),
+`apps/shopping-shell` (React 19 via the npm build) and
+`apps/shopping-list` (Vue 3.5 via the npm build). The real packages
 stay `"private": true` until they are bootstrapped on npm (#9, #10),
 because `release.yml` publishes every unpublished public package.
 
@@ -63,6 +64,11 @@ Commands (run from the repo root):
   `HOSTKIT_TOKENS_BASE` / `HOSTKIT_COMPONENTS_BASE` point the page at
   other URLs (e.g. jsDelivr). See `apps/share-widget/server.mjs`.
 - `shopping-shell` tests: Playwright smoke tests of the React production build
+- `shopping-list` tests: Playwright smoke tests of the Vue production build,
+  plus one test on the dev server (port 4331), because Vue only logs its
+  "Failed to resolve component" warning in development
+- `pnpm --filter shopping-list typecheck`: `vue-tsc`, on TypeScript 5.9
+  (vue-tsc needs the compiler API, which the TypeScript 7 package lacks)
 - `pnpm changeset`: add a changeset (see `.changeset/README.md`)
 
 Add lint commands here when they exist (#7).
