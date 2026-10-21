@@ -1,0 +1,12 @@
+# Generated or owned by tools.
+pnpm-lock.yaml
+dist/
+cdn/
+custom-elements.json
+test-results/
+playwright-report/
+coverage/
+storybook-static/
+# Markdown is hand-wrapped prose (ADRs, LEARNINGS). Prettier would
+# reflow it and edit accepted ADRs, so it is left out for now.
+*.md

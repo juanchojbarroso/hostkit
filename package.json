@@ -9,10 +9,36 @@
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r --workspace-concurrency=1 test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "lint:lit": "lit-analyzer packages/components/src --strict --maxWarnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "size": "pnpm --filter @hostkit-ui/components size",
+    "publint": "publint packages/components && publint packages/tokens",
     "changeset": "changeset",
     "release": "changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^3.0.3"
+    "@changesets/cli": "^3.0.3",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "eslint-plugin-lit": "^2.3.1",
+    "eslint-plugin-wc": "^3.1.0",
+    "globals": "^17.13.0",
+    "lit-analyzer": "^2.0.3",
+    "prettier": "^3.9.10",
+    "publint": "^0.3.25",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.72.0"
+  },
+  "pnpm": {
+    "packageExtensions": {
+      "lit-analyzer": {
+        "dependencies": {
+          "typescript": "~5.9.0"
+        }
+      }
+    }
   }
 }
