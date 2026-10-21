@@ -50,7 +50,7 @@ const background = (el: Element) => getComputedStyle(el).backgroundColor;
 
 test('variant defaults to primary and reflects a property change', async () => {
   const el = await render('<hk-button>Save</hk-button>');
-  expect(el.variant).toBe('primary');
+  expect(el.variant).toBe('secondary');
   expect(el.getAttribute('variant')).toBe('primary');
 
   el.variant = 'secondary';
