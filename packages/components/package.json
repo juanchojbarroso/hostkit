@@ -1,6 +1,6 @@
 {
   "name": "@hostkit-ui/components",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-agnostic hostkit components, built with Lit",
   "license": "MIT",
   "repository": {
