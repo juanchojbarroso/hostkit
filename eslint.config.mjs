@@ -9,6 +9,9 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig(
   globalIgnores([
+    // Agent worktrees are whole copies of the repo.
+    '.claude/',
+    '**/.vitest/',
     '**/dist/',
     '**/cdn/',
     '**/custom-elements.json',

@@ -1,4 +1,7 @@
+# Agent worktrees are whole copies of the repo.
+.claude/worktrees/
 # Generated or owned by tools.
+.vitest/
 pnpm-lock.yaml
 dist/
 cdn/
