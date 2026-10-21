@@ -24,8 +24,9 @@ with `<hk-button>`.
   (`@hostkit-ui/components/custom-elements.json`).
 - CDN build: Lit bundled in, under `cdn/`, for a plain
   `<script type="module">` from an exact-version jsDelivr or unpkg URL
-  (`cdn/button.js` or `cdn/all.js`). Loading both on one page is safe:
-  they share one `hk-button` definition and one copy of Lit.
+  (`cdn/button.js` or `cdn/all.js`). `cdn/button.js` works on its own;
+  `cdn/all.js` imports it, so loading both on one page is safe and gives
+  one `hk-button` definition and one copy of Lit.
 - Works unchanged in plain HTML, React 19+ and Vue 3.5+ (in Vue, mark
   `hk-` tags as custom elements with `compilerOptions.isCustomElement`),
   in evergreen Chromium, Firefox and WebKit.

@@ -4,8 +4,8 @@ import { customElement, property } from 'lit/decorators.js';
 /**
  * A button for actions. Listen for the native `click` event.
  *
- * Without the `@hostkit-ui/tokens` stylesheet, it uses the browser's
- * default button colours.
+ * Without the `@hostkit-ui/tokens` stylesheet, it falls back to the
+ * browser's system colours (`ButtonFace`, `ButtonText`, `Highlight`).
  *
  * @slot - The label.
  * @cssprop --hk-button-bg - Background colour.

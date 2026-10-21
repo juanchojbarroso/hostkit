@@ -23,4 +23,4 @@ supersede it with a new one.
 | [0014](0014-token-contract-private-primitives-and-one-entry-point.md) | Token contract: private primitives, system-colour fallback, one entry point | accepted |
 | [0015](0015-supported-frameworks-browsers-and-lit-dependency.md) | Supported frameworks, browsers and the Lit dependency | accepted |
 | [0016](0016-publish-from-ci-with-npm-trusted-publishing.md) | Publish from CI with npm trusted publishing, independent versions | accepted |
-| [0017](0017-cdn-entries-share-chunks.md) | CDN entries share chunks instead of being self-contained | accepted |
+| [0017](0017-cdn-entries-share-modules-by-url.md) | CDN entries share modules by URL | accepted |

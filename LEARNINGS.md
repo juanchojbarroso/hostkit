@@ -203,3 +203,22 @@ Format: date · what I tried · what broke · why · what I'd do next time.
 - **Next time:** test packaging from the artifact (the `.tgz`), not the
   directory it came from, and keep lit-analyzer in the gates even when
   `tsc` passes.
+
+## 2026-10-21 · My fix for duplicate CDN definitions made every page slower
+
+- **Tried:** fixing "loading `cdn/button.js` and `cdn/all.js` throws
+  `NotSupportedError`" by building the CDN entries together, so the
+  bundler moved `hk-button` and Lit into a shared `cdn/chunks/button.js`.
+- **Broke:** the test went green, but code review found the cost:
+  every entry became a 46-byte stub. A page that loads one component now
+  waited for two requests in a row, `cdn/button.js` no longer worked
+  when copied on its own, and the unhashed chunk with minified export
+  names could be mixed across releases through a version-range URL.
+- **Why:** I solved the case in the bug report (two entries on a page)
+  and didn't check the common case (one entry on a page) against the
+  same fix. The bundler's default chunking decided the design for me.
+- **Next time:** when fixing an edge case, list the common case's
+  properties first (request count, self-hosting, cache safety) and
+  check the fix keeps them. Here `preserveEntrySignatures:
+  'allow-extension'` keeps `hk-button` in `cdn/button.js` itself, and
+  `all.js` imports it by its public name (ADR-0017).

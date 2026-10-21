@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 
 // Palette value from @hostkit-ui/tokens, written out by hand.
 const BLUE_700 = 'rgb(29, 78, 216)';
+const GRAY_100 = 'rgb(243, 244, 246)';
 
 test('the share button renders with the hostkit brand colours', async ({ page }) => {
   await page.goto('/');
@@ -42,8 +43,9 @@ test('two widgets loading button.js and all.js share one hk-button and one Lit',
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/two-widgets.html');
 
+  // Both buttons must be upgraded and styled, not just parsed as HTML.
   await expect(page.locator('hk-button#first')).toHaveCSS('background-color', BLUE_700);
-  await expect(page.locator('hk-button#second')).toHaveAttribute('variant', 'secondary');
+  await expect(page.locator('hk-button#second')).toHaveCSS('background-color', GRAY_100);
   const litCopies = await page.evaluate(
     () => (globalThis as unknown as { litElementVersions?: unknown[] }).litElementVersions?.length,
   );

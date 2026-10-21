@@ -21,13 +21,18 @@ await build({
     minify: true,
     lib: { entry: { button: 'src/button.ts', all: 'src/all.ts' }, formats: ['es'] },
     rolldownOptions: {
+      // Let an entry hold the code it shares with other entries, instead of
+      // re-exporting it from a separate chunk: button.js is the component
+      // itself, and all.js imports ./button.js.
+      preserveEntrySignatures: 'allow-extension',
       output: {
         // Library mode keeps whitespace in ES output; force full minification.
         minify: true,
         entryFileNames: '[name].js',
-        // Shared modules. Every URL already contains the exact version, so
-        // a hash here would only make the file names unstable.
-        chunkFileNames: 'chunks/[name].js',
+        // Code shared by several components (e.g. Lit). The hash ties each
+        // entry to the exact chunk it was built with, even when a page uses
+        // a version-range URL that a CDN caches entry by entry.
+        chunkFileNames: 'chunks/[name]-[hash].js',
       },
     },
   },
