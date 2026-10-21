@@ -40,23 +40,29 @@ that shape day-to-day work are summarised below.
 Phase 0 (the walking skeleton, issue #1) is in progress. Packages:
 `@hostkit-ui/tokens`, `@hostkit-ui/components` (only `hk-button`), and
 `@hostkit-ui/release-probe` (throwaway, deprecated). Apps:
-`apps/share-widget` (plain HTML via the CDN build). The real packages
+`apps/share-widget` (plain HTML via the CDN build) and
+`apps/shopping-shell` (React 19 via the npm build). The real packages
 stay `"private": true` until they are bootstrapped on npm (#9, #10),
 because `release.yml` publishes every unpublished public package.
 
 Commands (run from the repo root):
 
-- `pnpm build` / `pnpm test`: every workspace (`pnpm -r`)
+- `pnpm build`: every workspace, in dependency order (`pnpm -r build`)
+- `pnpm test`: builds everything, then runs every workspace's tests.
+  App tests need fresh builds: for one app, run
+  `pnpm --filter <app>... build && pnpm --filter <app> test` (the `...`
+  includes the packages it depends on)
 - `pnpm --filter @hostkit-ui/components test`: component tests (Vitest
   browser mode); one file: `... test src/button.test.ts`; one test:
   `... test -t "disabled"`
 - `pnpm --filter @hostkit-ui/components typecheck`
-- `pnpm --filter @hostkit-ui/components build:cdn`: `cdn/` only
-- `pnpm --filter share-widget test`: builds the CDN files, then runs the
-  Playwright smoke tests. `HOSTKIT_TOKENS_DIR` / `HOSTKIT_COMPONENTS_DIR`
+- `pnpm --filter @hostkit-ui/components build`: `dist/` (with types and
+  `custom-elements.json`) and `cdn/`; `build:dist` or `build:cdn` for one
+- `share-widget` tests: Playwright smoke tests of the CDN build. `HOSTKIT_TOKENS_DIR` / `HOSTKIT_COMPONENTS_DIR`
   serve other copies of the packages (e.g. an unpacked tarball);
   `HOSTKIT_TOKENS_BASE` / `HOSTKIT_COMPONENTS_BASE` point the page at
   other URLs (e.g. jsDelivr). See `apps/share-widget/server.mjs`.
+- `shopping-shell` tests: Playwright smoke tests of the React production build
 - `pnpm changeset`: add a changeset (see `.changeset/README.md`)
 
 Add lint commands here when they exist (#7).

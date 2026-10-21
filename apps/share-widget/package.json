@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "pnpm --filter @hostkit-ui/components run build && playwright test",
+    "test": "pnpm --filter share-widget... build && playwright test",
     "typecheck": "tsc"
   },
   "devDependencies": {

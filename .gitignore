@@ -1,6 +1,7 @@
 node_modules/
 dist/
 cdn/
+custom-elements.json
 storybook-static/
 coverage/
 .vitest/

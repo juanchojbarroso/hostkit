@@ -1,0 +1,6 @@
+{
+  // Type declarations for dist/ (ADR-0006). Tests are not published.
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": false, "types": [] },
+  "exclude": ["src/**/*.test.ts", "src/vitest-commands.d.ts"]
+}

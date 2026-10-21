@@ -5,8 +5,31 @@
   "description": "Framework-agnostic hostkit components, built with Lit",
   "license": "MIT",
   "type": "module",
+  "exports": {
+    "./button.js": {
+      "types": "./dist/button.d.ts",
+      "default": "./dist/button.js"
+    },
+    "./all.js": {
+      "types": "./dist/all.d.ts",
+      "default": "./dist/all.js"
+    },
+    "./custom-elements.json": "./custom-elements.json",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": [
+    "./dist/button.js",
+    "./dist/all.js"
+  ],
+  "customElements": "custom-elements.json",
+  "files": [
+    "dist",
+    "cdn",
+    "custom-elements.json"
+  ],
   "scripts": {
-    "build": "pnpm run build:cdn",
+    "build": "pnpm run build:dist && pnpm run build:cdn",
+    "build:dist": "node scripts/build-dist.mjs && tsc -p tsconfig.build.json && cem analyze",
     "build:cdn": "node scripts/build-cdn.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
@@ -15,6 +38,7 @@
     "lit": "^3.3.0"
   },
   "devDependencies": {
+    "@custom-elements-manifest/analyzer": "^0.11.0",
     "@hostkit-ui/tokens": "workspace:*",
     "@vitest/browser-playwright": "^5.0.5",
     "axe-core": "^4.14.0",
@@ -22,8 +46,5 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
-  },
-  "files": [
-    "cdn"
-  ]
+  }
 }

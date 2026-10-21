@@ -74,3 +74,22 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   realistic parent (a clickable row), not an abstract `document`
   listener. Also: an ancestor's capture-phase listener still sees the
   click. A custom element can't stop that; it's documented on `disabled`.
+
+## 2026-10-21 · `sideEffects: false` silently deletes a custom element
+
+- **Tried:** on purpose, setting `"sideEffects": false` on
+  `@hostkit-ui/components` and building the React shell for production.
+- **Broke:** the bundler dropped `import '@hostkit-ui/components/button.js'`
+  as dead code, because nothing used its exports. `customElements.define()`
+  never ran, and `<hk-button>` stayed an unknown, unstyled tag. Only the
+  production build fails; the dev server doesn't tree-shake.
+- **Why:** a side-effect import exists *only* for its side effect.
+  `sideEffects: false` tells the bundler that no such file exists.
+- **Next time:** list every file that calls `define()` (ADR-0005), and
+  test the **production** build of a real consumer, never only the dev
+  server. The shopping-shell smoke tests now catch this.
+- **Also learned (the open item from ADR-0012):** React 19 sets
+  `variant` and `disabled` on `hk-button` as **properties**, not string
+  attributes, and re-renders update them. `onClick` works because
+  `click` is native. Custom events (`hk-change`) are still unchecked:
+  Phase 1, with `hk-checkbox`.
