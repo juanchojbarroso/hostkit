@@ -54,7 +54,7 @@ package version not yet on npm**, using OIDC trusted publishing. So
 never merge a "Version Packages" PR for a package that npm doesn't
 trust yet (bootstrap and `npm trust` first, as in #10). Both packages
 sit at the `0.0.0` bootstrap version until the first CI release
-(`0.1.0`, #11).
+(`0.1.0`, #11), after which `0.0.0` is deprecated with `npm deprecate`.
 
 Commands (run from the repo root):
 

@@ -10,7 +10,9 @@ with `<hk-button>`.
   - `variant` (attribute `variant`, reflects): `"primary"` (default) or
     `"secondary"`.
   - `disabled` (boolean attribute `disabled`, reflects): fires no `click`
-    on itself or on bubble-phase listeners of its ancestors.
+    on itself or on bubble-phase listeners of its ancestors. Known
+    limitation: capture-phase listeners on ancestors (for example
+    `document.addEventListener('click', fn, true)`) still see the click.
   - Custom properties: `--hk-button-bg`, `--hk-button-text` and
     `--hk-button-focus-ring`.
 - Theming comes from `@hostkit-ui/tokens`, an optional peer dependency
