@@ -139,8 +139,10 @@ token values, never different components.
 **Build** (ADR-0006). Vite library mode, two outputs:
 - `dist/`: ESM, `preserveModules`, Lit **external**. `exports` points
   here. Types come from `tsc --emitDeclarationOnly`.
-- `cdn/`: Lit bundled, minified, one file per entry plus `all.js`. It
-  must load from an exact-version jsDelivr/unpkg URL.
+- `cdn/`: Lit bundled, minified, one small file per entry plus `all.js`;
+  the code they share lives in `cdn/chunks/` (ADR-0017), so loading two
+  entries on one page shares one definition and one Lit. It must load
+  from an exact-version jsDelivr/unpkg URL.
 Check the `preserveModules` output by hand. Never ship two copies of Lit
 to a bundler user.
 

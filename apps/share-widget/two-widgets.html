@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Two widgets on one page</title>
+    <!--
+      Two widgets from different teams on one page: one loads the single
+      component file, the other loads the all-components file.
+    -->
+    <link rel="stylesheet" href="%HOSTKIT_TOKENS_BASE%/tokens.css" />
+    <script type="module" src="%HOSTKIT_COMPONENTS_BASE%/cdn/button.js"></script>
+    <script type="module" src="%HOSTKIT_COMPONENTS_BASE%/cdn/all.js"></script>
+  </head>
+  <body>
+    <hk-button id="first">First widget</hk-button>
+    <hk-button id="second" variant="secondary">Second widget</hk-button>
+  </body>
+</html>

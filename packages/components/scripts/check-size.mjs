@@ -12,7 +12,7 @@ const budgets = {
   // npm entries: Lit is external, the consumer's bundler adds it once.
   'dist/button.js': 3_000,
   'dist/all.js': 3_000,
-  // CDN entries are self-contained, Lit included.
+  // CDN entries plus the shared chunks they import (ADR-0017), Lit included.
   'cdn/button.js': 12_000,
   'cdn/all.js': 12_000,
 };

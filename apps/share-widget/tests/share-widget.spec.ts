@@ -34,3 +34,19 @@ test('the disabled copy button never fires its listener', async ({ page }) => {
   await copy.evaluate((el: HTMLElement) => el.click());
   await expect(page.locator('#shares')).toHaveText('0');
 });
+
+test('two widgets loading button.js and all.js share one hk-button and one Lit', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/two-widgets.html');
+
+  await expect(page.locator('hk-button#first')).toHaveCSS('background-color', BLUE_700);
+  await expect(page.locator('hk-button#second')).toHaveAttribute('variant', 'secondary');
+  const litCopies = await page.evaluate(
+    () => (globalThis as unknown as { litElementVersions?: unknown[] }).litElementVersions?.length,
+  );
+  expect(errors).toEqual([]);
+  expect(litCopies).toBe(1);
+});
