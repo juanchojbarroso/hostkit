@@ -64,8 +64,23 @@ Commands (run from the repo root):
   other URLs (e.g. jsDelivr). See `apps/share-widget/server.mjs`.
 - `shopping-shell` tests: Playwright smoke tests of the React production build
 - `pnpm changeset`: add a changeset (see `.changeset/README.md`)
+- `pnpm lint`: ESLint; `pnpm lint:lit`: lit-analyzer on the component
+  templates (strict, warnings fail)
+- `pnpm format` / `pnpm format:check`: Prettier (Markdown is excluded,
+  see `.prettierignore`)
+- `pnpm typecheck`: every workspace. Run it after `pnpm build`: the apps
+  type-check against `dist/*.d.ts`
+- `pnpm size`: gzip budgets per entry (`packages/components/scripts/check-size.mjs`);
+  `pnpm publint`: packs each package and lints the tarball. Both need a
+  build first
 
-Add lint commands here when they exist (#7).
+**CI** (`.github/workflows/ci.yml`) runs on every PR and push to
+`master`. Job `checks`: lint, format check, lit-analyzer, build (which
+generates `custom-elements.json`), typecheck, size, publint. Job `test`:
+`pnpm test` with `CI` set, so Vitest and Playwright run Chromium,
+Firefox and WebKit (browsers cached). `release.yml` calls `ci.yml` as a
+reusable workflow and publishes only after it passes on the same commit.
+Keep publishing in `release.yml`: npm trusts that file name (ADR-0016).
 
 Toolchain: Node 24 LTS (`.nvmrc`, with `engine-strict=true` in `.npmrc`,
 so other Node versions fail to install) and pnpm 10 (`packageManager`).
@@ -115,10 +130,18 @@ compiler API. Don't write `@property() accessor x` (standard syntax).
 **Tests** (ADR-0007). Vitest browser mode with the Playwright provider.
 Chromium locally; Chromium, Firefox and WebKit in CI. axe-core runs
 inside the component tests. Don't use happy-dom or jsdom. To reproduce
-a WebKit-only CI failure, run `--browser=webkit`.
+a CI-only failure, set `CI` (it adds the instances) and pick one:
+`CI=1 pnpm --filter @hostkit-ui/components test --browser=webkit`. On a
+Mac, WebKit follows the OS appearance and skips buttons on Tab unless
+keyboard navigation is on in System Settings, so a local WebKit run can
+fail where Linux CI passes.
 
-**Lint** (ADR-0008). ESLint (typescript-eslint, `eslint-plugin-lit`,
-`eslint-plugin-wc`) + Prettier + lit-analyzer.
+**Lint** (ADR-0008). ESLint (typescript-eslint `strict`, `eslint-plugin-lit`,
+`eslint-plugin-wc` best-practice) + Prettier + lit-analyzer. Both
+typescript-eslint and lit-analyzer need TypeScript 5.9 (TypeScript 7 has
+no compiler API): the root `typescript ~5.9` serves typescript-eslint's
+peer, and root `pnpm.packageExtensions` gives it to lit-analyzer. The
+workspaces still compile with TypeScript 7.
 
 ## Public API contract (ADR-0012)
 

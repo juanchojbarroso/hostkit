@@ -93,3 +93,32 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   attributes, and re-renders update them. `onClick` works because
   `click` is native. Custom events (`hk-change`) are still unchecked:
   Phase 1, with `hk-checkbox`.
+
+## 2026-10-21 · The first three-engine run failed three tests that Chromium passed
+
+- **Tried:** the existing `hk-button` tests on Firefox and WebKit, for
+  the CI gate (#7).
+- **Broke, 1 (Firefox):** "a disabled button fires no click" counted a
+  click. The forced click at `(1, 1)`, meant as "the padding", landed
+  outside the `border-radius` curve, so Firefox gave it to the row
+  behind the button. That is correct behaviour; the test point was wrong.
+  Chromium hit-tested the corner as the button.
+- **Broke, 2 (WebKit, Mac only):** the light-theme test got the dark
+  value. With no emulated colour scheme, WebKit follows the machine's
+  appearance, and the Mac was in dark mode. Chromium headless is always
+  light, which hid the assumption.
+- **Broke, 3 (WebKit, Mac only):** Tab skipped `hk-button`. macOS WebKit,
+  like Safari, only tabs to buttons when keyboard navigation is on in
+  System Settings. Linux CI passes.
+- **Why:** a test written against one engine encodes that engine's
+  defaults (hit-testing, colour scheme, focus rules) as if they were
+  the spec.
+- **Next time:** pin every environment input a test depends on (colour
+  scheme now starts as `light` in `beforeEach`), click well inside the
+  element's shape, and run a new test on all three engines once before
+  trusting it (`CI=1 ... test`).
+- **Also:** `--browser=webkit` alone fails with "browser.instances ...
+  is empty", because local runs only define Chromium. Set `CI=1` too.
+- **Also:** Prettier on Markdown would rewrite accepted ADRs (joining
+  lines, de-indenting wrapped code spans, escaping a line that starts
+  with `2026.`), so Markdown stays out of Prettier for now.
