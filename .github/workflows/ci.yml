@@ -1,6 +1,6 @@
 name: CI
 
-# The quality gates (issue #7). Runs on every PR and every push to master,
+# The quality gates (issues #7 and #8). Runs on every PR and every push to master,
 # and release.yml calls it, so npm only gets a commit that passed them.
 on:
   pull_request:
@@ -75,4 +75,41 @@ jobs:
           path: |
             packages/components/.vitest/attachments/
             apps/*/test-results/
+          if-no-files-found: ignore
+
+  # Issue #8: the packages as npm will ship them. Packs both packages,
+  # installs the tarballs into copies of the apps outside the workspace
+  # (lit, react and vue from the registry), checks that nothing resolves
+  # through a workspace link, and runs the apps' own smoke tests.
+  tarball:
+    name: Tarball smoke tests (Chromium, Firefox, WebKit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Read the Playwright version
+        id: playwright
+        run: echo "version=$(pnpm --filter @hostkit-ui/components exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      # The system libraries, plus the browsers on a cache miss. If the
+      # copied apps resolve a newer Playwright, the script downloads its
+      # browsers too.
+      - run: pnpm --filter @hostkit-ui/components exec playwright install --with-deps chromium firefox webkit
+      # Works in $RUNNER_TEMP/hostkit-tarball, outside the checkout.
+      - run: pnpm test:tarball
+      - name: Upload failure screenshots and traces
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: tarball-failures
+          path: ${{ runner.temp }}/hostkit-tarball/apps/*/test-results/
           if-no-files-found: ignore
