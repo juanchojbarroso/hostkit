@@ -3,10 +3,7 @@ import { playwright } from '@vitest/browser-playwright';
 import type { BrowserCommand } from 'vitest/node';
 
 // Emulates the OS colour scheme, so tests can check the ADR-0013 precedence.
-const setColorScheme: BrowserCommand<['light' | 'dark' | null]> = async (
-  { page },
-  colorScheme,
-) => {
+const setColorScheme: BrowserCommand<['light' | 'dark' | null]> = async ({ page }, colorScheme) => {
   await page.emulateMedia({ colorScheme });
 };
 
