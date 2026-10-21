@@ -98,6 +98,16 @@ Commands (run from the repo root):
   The share widget serves the unpacked tarballs. Needs network; prints
   the work directory, which it keeps for debugging. `CI=true` runs all
   three engines
+- `pnpm test:registry <versions>` (same script, registry mode, #12): the
+  same apps and specs against a **released** version. `<versions>` is
+  `0.1.0` (both packages) or `tokens@0.1.0,components@0.2.0` (a package
+  left out uses npm `latest`). Waits until npm and jsDelivr serve the
+  version (`HOSTKIT_WAIT_MINUTES`, default 15, per file), installs
+  `^<version>` from npm into the React and Vue copies, fails unless each
+  installed copy is exactly that version with npm's integrity in the
+  lockfile, and points the share widget at exact-version jsDelivr URLs
+  (local mounts point nowhere, so a fallback 404s). A newer matching
+  patch on npm makes it fail, by design
 
 **CI** (`.github/workflows/ci.yml`) runs on every PR and push to
 `master`. Job `checks`: lint, format check, lit-analyzer, build (which
@@ -108,6 +118,15 @@ on three engines, working in `$RUNNER_TEMP/hostkit-tarball`.
 `release.yml` calls `ci.yml` as a reusable workflow (`gates`, which
 includes all three jobs) and publishes only after it passes on the same commit.
 Keep publishing in `release.yml`: npm trusts that file name (ADR-0016).
+After a publish (`changesets/action` output `published == 'true'`), its
+`post-publish` job calls `post-publish-smoke.yml` with the tokens and
+components versions from `publishedPackages`: `pnpm test:registry` on
+three engines, in `$RUNNER_TEMP/hostkit-registry`. If it fails, a
+`report` job (the only one with `issues: write`) opens an issue labelled
+`bug` with the run URL and the failing stage. That workflow never gets
+`id-token: write` and has no publish step, so it is safe to run by hand
+for any released version:
+`gh workflow run post-publish-smoke.yml -f version=0.1.0`.
 
 Toolchain: Node 24 LTS (`.nvmrc`, with `engine-strict=true` in `.npmrc`,
 so other Node versions fail to install) and pnpm 10 (`packageManager`).

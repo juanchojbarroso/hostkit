@@ -246,3 +246,21 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   with the starting state the rule protects (here, a `false` boolean),
   not the app's current one. The smoke suite has no test for this yet;
   it's an open item in the #13 PR.
+
+## 2026-10-21 · A new workflow can't be dispatched from its own branch
+
+- **Tried:** proving the new `post-publish-smoke.yml` (#12) for `0.1.0`
+  before merging, with
+  `gh workflow run post-publish-smoke.yml --ref feat/12-registry-smoke -f version=0.1.0`.
+- **Broke:** `HTTP 404: workflow post-publish-smoke.yml not found on the
+  default branch`. The `--ref` flag picks which commit runs, not where
+  GitHub looks for the workflow.
+- **Why:** GitHub registers `workflow_dispatch` triggers only from the
+  default branch. A workflow that exists only on a feature branch can
+  run there through `push` or `pull_request`, never through dispatch.
+- **Next time:** to prove a dispatch-only workflow before merge, give it
+  `workflow_call` too and call it from a temporary workflow with a
+  `push` trigger limited to the branch and to that file's own path. That
+  also tests the `workflow_call` path the real caller (`release.yml`)
+  uses. Delete the temporary file before merge, and keep the run URLs
+  as evidence.
