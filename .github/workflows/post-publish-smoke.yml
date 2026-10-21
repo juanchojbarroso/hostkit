@@ -1,0 +1,101 @@
+name: Post-publish smoke
+
+# Issue #12: the versions on npm and jsDelivr pass the same smoke tests
+# as the tarballs. release.yml calls this after every publish, with the
+# versions it just released; run it by hand for any released version:
+#
+#   gh workflow run post-publish-smoke.yml -f version=0.1.0
+#
+# This is a separate file, not a job inside release.yml, so a manual run
+# can never reach the publish step, and nothing here can mint an OIDC
+# token: npm trusts only release.yml (ADR-0016).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'One version for both packages (0.1.0), or tokens@0.1.0,components@0.2.0. A package left out uses npm latest.'
+        required: true
+      wait-minutes:
+        description: 'Give up on npm or jsDelivr after this many minutes, per file'
+        default: '15'
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+      wait-minutes:
+        type: string
+        default: '15'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Registry smoke tests (Chromium, Firefox, WebKit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      failed-stage: ${{ steps.smoke.outputs.failed-stage }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Read the Playwright version
+        id: playwright
+        run: echo "version=$(pnpm --filter @hostkit-ui/components exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - run: pnpm --filter @hostkit-ui/components exec playwright install --with-deps chromium firefox webkit
+      # Works in $RUNNER_TEMP/hostkit-registry. Inputs go through env, never
+      # straight into the shell; the script validates the version.
+      - id: smoke
+        run: pnpm test:registry "$VERSION"
+        env:
+          VERSION: ${{ inputs.version }}
+          HOSTKIT_WAIT_MINUTES: ${{ inputs.wait-minutes }}
+      - name: Upload failure screenshots and traces
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: registry-failures
+          path: ${{ runner.temp }}/hostkit-registry/apps/*/test-results/
+          if-no-files-found: ignore
+
+  # A broken release must be visible, not just a red run nobody watches.
+  # Only this job can write issues; it runs no repo code.
+  report:
+    needs: smoke
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open an issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ inputs.version }}
+          STAGE: ${{ needs.smoke.outputs.failed-stage || 'unknown (see the log)' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TRIGGER: ${{ github.event_name }} on ${{ github.ref_name }}
+        run: |
+          gh issue create --label bug \
+            --title "Post-publish smoke tests failed for $VERSION" \
+            --body "$(cat <<EOF
+          The registry smoke tests (issue #12) failed for \`$VERSION\`: the packages on npm or jsDelivr don't pass the apps' smoke tests.
+
+          - Failed at: \`$STAGE\`
+          - Run: $RUN_URL
+          - Trigger: $TRIGGER
+
+          Reproduce locally: \`pnpm test:registry $VERSION\` (add \`CI=true\` for all three engines).
+          EOF
+          )"
