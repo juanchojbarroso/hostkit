@@ -1,13 +1,11 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-export type ButtonVariant = 'primary' | 'secondary';
-
 /**
  * A button for actions. Listen for the native `click` event.
  *
- * Without `@hostkit-ui/tokens` loaded, it falls back to the browser's
- * system colours (ADR-0014).
+ * Without the `@hostkit-ui/tokens` stylesheet, it falls back to the
+ * browser's system colours (`ButtonFace`, `ButtonText`, `Highlight`).
  *
  * @slot - The label.
  * @cssprop --hk-button-bg - Background colour.
@@ -55,8 +53,10 @@ export class HkButton extends LitElement {
     }
   `;
 
+  // The union is written here, not as an alias, so the Custom Elements
+  // Manifest lists the allowed values for tools and agents.
   /** Visual style. */
-  @property({ reflect: true }) variant: ButtonVariant = 'primary';
+  @property({ reflect: true }) variant: 'primary' | 'secondary' = 'primary';
 
   /**
    * Disables the button. A disabled button fires no `click` on itself or
@@ -88,6 +88,9 @@ export class HkButton extends LitElement {
     return html`<button type="button" ?disabled=${this.disabled}><slot></slot></button>`;
   }
 }
+
+/** The allowed values of `variant`. */
+export type ButtonVariant = HkButton['variant'];
 
 declare global {
   interface HTMLElementTagNameMap {

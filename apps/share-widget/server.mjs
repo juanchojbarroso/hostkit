@@ -41,8 +41,10 @@ function inside(root, path) {
 }
 
 async function respond(url) {
-  if (url === '/' || url === '/index.html') {
-    const html = await readFile(join(here, 'index.html'), 'utf8');
+  // Pages: index.html, plus any other top-level .html page in this app.
+  const page = url === '/' ? 'index.html' : url.slice(1);
+  if (/^[\w-]+\.html$/.test(page)) {
+    const html = await readFile(join(here, page), 'utf8');
     return [types['.html'], html.replace(/%(HOSTKIT_\w+_BASE)%/g, (_, name) => bases[name])];
   }
   for (const [prefix, root] of Object.entries(mounts)) {
