@@ -89,13 +89,24 @@ Commands (run from the repo root):
 - `pnpm size`: gzip budgets per entry (`packages/components/scripts/check-size.mjs`);
   `pnpm publint`: packs each package and lints the tarball. Both need a
   build first
+- `pnpm test:tarball` (`scripts/tarball-smoke.mjs`): builds and packs
+  tokens and components, copies the three apps to a temp directory
+  outside the workspace, installs the tarballs there (`file:*.tgz`; lit,
+  react and vue from the registry), fails if any app resolves
+  `@hostkit-ui/*` into the repo or to a `package.json` other than the
+  tarball's, then runs each app's build, typecheck and Playwright tests.
+  The share widget serves the unpacked tarballs. Needs network; prints
+  the work directory, which it keeps for debugging. `CI=true` runs all
+  three engines
 
 **CI** (`.github/workflows/ci.yml`) runs on every PR and push to
 `master`. Job `checks`: lint, format check, lit-analyzer, build (which
 generates `custom-elements.json`), typecheck, size, publint. Job `test`:
 `pnpm test` with `CI` set, so Vitest and Playwright run Chromium,
-Firefox and WebKit (browsers cached). `release.yml` calls `ci.yml` as a
-reusable workflow and publishes only after it passes on the same commit.
+Firefox and WebKit (browsers cached). Job `tarball`: `pnpm test:tarball`
+on three engines, working in `$RUNNER_TEMP/hostkit-tarball`.
+`release.yml` calls `ci.yml` as a reusable workflow (`gates`, which
+includes all three jobs) and publishes only after it passes on the same commit.
 Keep publishing in `release.yml`: npm trusts that file name (ADR-0016).
 
 Toolchain: Node 24 LTS (`.nvmrc`, with `engine-strict=true` in `.npmrc`,
