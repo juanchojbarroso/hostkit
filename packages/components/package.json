@@ -1,9 +1,16 @@
 {
   "name": "@hostkit-ui/components",
   "version": "0.0.0",
-  "private": true,
   "description": "Framework-agnostic hostkit components, built with Lit",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juanchojbarroso/hostkit.git",
+    "directory": "packages/components"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "exports": {
     "./button.js": {
@@ -36,6 +43,14 @@
   },
   "dependencies": {
     "lit": "^3.3.0"
+  },
+  "peerDependencies": {
+    "@hostkit-ui/tokens": "^0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@hostkit-ui/tokens": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "^0.11.0",
