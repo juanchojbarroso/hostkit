@@ -7,6 +7,11 @@ const setColorScheme: BrowserCommand<['light' | 'dark' | null]> = async ({ page 
   await page.emulateMedia({ colorScheme });
 };
 
+// Chromium locally, all three engines in CI (ADR-0007).
+const browsers = process.env.CI
+  ? (['chromium', 'firefox', 'webkit'] as const)
+  : (['chromium'] as const);
+
 export default defineConfig({
   // Legacy decorators until Oxc lowers standard ones (ADR-0011).
   oxc: { decorator: { legacy: true } },
@@ -15,7 +20,7 @@ export default defineConfig({
       enabled: true,
       headless: true,
       provider: playwright(),
-      instances: [{ browser: 'chromium' }],
+      instances: browsers.map((browser) => ({ browser })),
       commands: { setColorScheme },
     },
   },
