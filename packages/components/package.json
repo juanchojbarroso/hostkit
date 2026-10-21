@@ -31,7 +31,6 @@
   "customElements": "custom-elements.json",
   "files": [
     "dist",
-    "cdn",
     "custom-elements.json"
   ],
   "scripts": {
