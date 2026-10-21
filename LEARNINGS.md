@@ -173,3 +173,33 @@ Format: date · what I tried · what broke · why · what I'd do next time.
 - **Also:** Prettier on Markdown would rewrite accepted ADRs (joining
   lines, de-indenting wrapped code spans, escaping a line that starts
   with `2026.`), so Markdown stays out of Prettier for now.
+
+## 2026-10-21 · The tarball gate: what each deliberate break showed
+
+- **Tried:** the tarball smoke tests (#8), then three deliberate breaks:
+  removing `cdn` from components' `files`, binding a string to
+  `?disabled` in `hk-button`, and pointing an app's copy back at the repo.
+- **Broke, 1:** without `cdn` in `files`, every other gate stayed green:
+  `publint` passed (no `exports` entry points at `cdn/`), `size` passed
+  (it reads `cdn/` from disk, not from the tarball), and the workspace
+  share widget passed (it serves `packages/components`). Only the
+  tarball job went red: the widget loaded no `button.js`, so `hk-button`
+  never upgraded and stayed unstyled.
+- **Broke, 2:** the `?disabled=${this.variant}` error passed `tsc`.
+  TypeScript sees a tagged template string, not a binding; only
+  lit-analyzer (`no-incompatible-type-binding`) reported it. The
+  behaviour tests also failed, but only because `'primary'` is truthy.
+- **Broke, 3 (a warning, not a failure):** every standalone install
+  prints `unmet peer @hostkit-ui/tokens@^0.1.0: found 0.0.0`. The
+  bootstrap version doesn't satisfy the peer range (as in the Changesets
+  dry runs). pnpm only warns, so the gate doesn't see it; it goes away
+  when both packages are at `0.1.0`.
+- **Also learned:** pnpm links a `file:` *directory* dependency into
+  `.pnpm`, so "is it a symlink into the repo?" alone misses it. The
+  check that caught it compares the installed `package.json` with the
+  tarball's (the repo's still says `workspace:*`).
+- **Why:** a check that reads the working tree can't see what `files`
+  leaves out, and a type checker that sees strings can't see templates.
+- **Next time:** test packaging from the artifact (the `.tgz`), not the
+  directory it came from, and keep lit-analyzer in the gates even when
+  `tsc` passes.

@@ -23,9 +23,11 @@ const packages = { tokens: 'packages/tokens', components: 'packages/components' 
 const apps = ['share-widget', 'shopping-shell', 'shopping-list'];
 const browsers = process.env.CI ? ['chromium', 'firefox', 'webkit'] : ['chromium'];
 
-// CI gets a fixed directory, so the workflow can upload test results from
-// it. Locally, a fresh temporary directory per run.
-const work = process.env.RUNNER_TEMP
+// GitHub Actions gets a fixed directory, so the workflow can upload test
+// results from it; the script owns it and empties it first. Anywhere
+// else, a fresh temporary directory per run, never deleted for you.
+const actions = process.env.GITHUB_ACTIONS === 'true' && process.env.RUNNER_TEMP;
+const work = actions
   ? join(await realpath(process.env.RUNNER_TEMP), 'hostkit-tarball')
   : await realpath(await mkdtemp(join(tmpdir(), 'hostkit-tarball-')));
 
@@ -34,6 +36,7 @@ const inside = (path, dir) => path === dir || path.startsWith(dir + sep);
 function run(command, args, options = {}) {
   console.log(`\n$ ${command} ${args.join(' ')}${options.cwd ? `  (in ${options.cwd})` : ''}`);
   const result = spawnSync(command, args, { stdio: 'inherit', ...options });
+  if (result.error) throw new Error(`${command} could not start: ${result.error.message}`);
   if (result.status !== 0) {
     throw new Error(`${command} ${args.join(' ')} exited with ${result.status ?? result.signal}`);
   }
@@ -43,8 +46,8 @@ function fail(message) {
   throw new Error(`Workspace-link check failed: ${message}`);
 }
 
-if (inside(work, repo)) fail(`the work directory ${work} is inside the repo`);
-await rm(work, { recursive: true, force: true });
+if (inside(work, repo) || inside(repo, work)) fail(`the work directory ${work} overlaps the repo`);
+if (actions) await rm(work, { recursive: true, force: true });
 await mkdir(work, { recursive: true });
 console.log(`Work directory: ${work}`);
 
@@ -64,6 +67,9 @@ for (const [name, dir] of Object.entries(packages)) {
   run('tar', ['-xzf', tarballs[name], '-C', unpacked[name]]);
   // npm tarballs keep everything under package/.
   unpacked[name] = join(unpacked[name], 'package');
+  if ((await readFile(join(unpacked[name], 'package.json'), 'utf8')).includes('workspace:')) {
+    throw new Error(`the @hostkit-ui/${name} tarball still has workspace: ranges`);
+  }
 }
 
 // 2 and 3. Copy each app and install it on its own.
@@ -78,11 +84,10 @@ for (const app of apps) {
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   for (const field of ['dependencies', 'devDependencies']) {
     for (const dep of Object.keys(manifest[field] ?? {})) {
-      const name = dep.replace('@hostkit-ui/', '');
-      if (dep.startsWith('@hostkit-ui/')) {
-        if (!tarballs[name]) throw new Error(`${app} depends on ${dep}, which is not packed`);
-        manifest[field][dep] = `file:${tarballs[name]}`;
-      }
+      if (!dep.startsWith('@hostkit-ui/')) continue;
+      const tarball = tarballs[dep.slice('@hostkit-ui/'.length)];
+      if (!tarball) throw new Error(`${app} depends on ${dep}, which is not packed`);
+      manifest[field][dep] = `file:${tarball}`;
     }
   }
   await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
@@ -104,8 +109,6 @@ for (const app of apps) {
     const installed = await readFile(join(real, 'package.json'), 'utf8');
     const packed = await readFile(join(unpacked[name], 'package.json'), 'utf8');
     if (installed !== packed) fail(`${app}'s @hostkit-ui/${name} is not the packed package.json`);
-    if (installed.includes('workspace:'))
-      fail(`${app}'s @hostkit-ui/${name} has workspace: ranges`);
     console.log(`  @hostkit-ui/${name} -> ${relative(dest, real)} (package.json matches tarball)`);
   }
   const components = await realpath(join(dest, 'node_modules', '@hostkit-ui', 'components'));
