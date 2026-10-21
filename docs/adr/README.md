@@ -12,7 +12,7 @@ supersede it with a new one.
 | [0003](0003-hand-written-css-tokens-first.md) | Hand-written CSS tokens first | accepted |
 | [0004](0004-pin-node-24-lts.md) | Pin Node 24 LTS | accepted |
 | [0005](0005-single-components-package-with-subpath-exports.md) | Single components package, subpath exports | accepted, amended by 0010 |
-| [0006](0006-vite-library-build-with-npm-and-cdn-outputs.md) | Vite library build, npm + CDN outputs | accepted |
+| [0006](0006-vite-library-build-with-npm-and-cdn-outputs.md) | Vite library build, npm + CDN outputs | accepted, amended by 0017 |
 | [0007](0007-vitest-browser-mode-with-playwright.md) | Vitest browser mode + Playwright | accepted |
 | [0008](0008-eslint-prettier-with-lit-rules.md) | ESLint + Prettier + Lit/WC rules | accepted |
 | [0009](0009-public-repository-from-the-start.md) | Public repository from the start | accepted |
@@ -23,3 +23,4 @@ supersede it with a new one.
 | [0014](0014-token-contract-private-primitives-and-one-entry-point.md) | Token contract: private primitives, system-colour fallback, one entry point | accepted |
 | [0015](0015-supported-frameworks-browsers-and-lit-dependency.md) | Supported frameworks, browsers and the Lit dependency | accepted |
 | [0016](0016-publish-from-ci-with-npm-trusted-publishing.md) | Publish from CI with npm trusted publishing, independent versions | accepted |
+| [0017](0017-cdn-entries-share-chunks.md) | CDN entries share chunks instead of being self-contained | accepted |
