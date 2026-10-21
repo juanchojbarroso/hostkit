@@ -85,7 +85,7 @@ export class HkButton extends LitElement {
   }
 
   render() {
-    return html`<button type="button" ?disabled=${this.disabled}><slot></slot></button>`;
+    return html`<button type="button" ?disabled=${this.variant}><slot></slot></button>`;
   }
 }
 
