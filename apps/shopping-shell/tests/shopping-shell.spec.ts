@@ -36,9 +36,7 @@ test('a React prop sets the element property, and the attribute reflects', async
   await expect(button).toHaveAttribute('variant', 'secondary');
 });
 
-test('disabled passed as a React prop is a property, not a string attribute', async ({
-  page,
-}) => {
+test('disabled passed as a React prop is a property, not a string attribute', async ({ page }) => {
   await page.goto('/');
   const archive = page.locator('hk-button#archive');
   expect(await archive.evaluate((el: HkButton) => el.disabled)).toBe(true);
