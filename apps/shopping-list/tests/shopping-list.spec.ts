@@ -37,9 +37,7 @@ test('the production build upgrades hk-button and runs exactly one copy of Lit',
   expect(copies).toEqual({ litElement: 1, reactiveElement: 1, litHtml: 1 });
 });
 
-test('a bound variant sets the element property, and the attribute reflects', async ({
-  page,
-}) => {
+test('a bound variant sets the element property, and the attribute reflects', async ({ page }) => {
   await page.goto('/');
   const button = page.locator('hk-button#add-item');
   expect(await button.evaluate((el: HkButton) => el.variant)).toBe('primary');

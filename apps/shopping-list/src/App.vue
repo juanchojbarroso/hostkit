@@ -13,7 +13,9 @@ const archiveLocked = ref(true);
     <h1>Shopping Notes</h1>
     <hk-button id="add-item" :variant="variant" @click="items++">Add item</hk-button>
     <hk-button id="archive" :disabled="archiveLocked" @click="items = -1">Archive</hk-button>
-    <p>Items added: <output id="items">{{ items }}</output></p>
+    <p>
+      Items added: <output id="items">{{ items }}</output>
+    </p>
     <button
       type="button"
       id="toggle-variant"
