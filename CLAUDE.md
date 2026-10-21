@@ -42,9 +42,19 @@ Phase 0 (the walking skeleton, issue #1) is in progress. Packages:
 `@hostkit-ui/release-probe` (throwaway, deprecated). Apps:
 `apps/share-widget` (plain HTML via the CDN build),
 `apps/shopping-shell` (React 19 via the npm build) and
-`apps/shopping-list` (Vue 3.5 via the npm build). The real packages
-stay `"private": true` until they are bootstrapped on npm (#9, #10),
-because `release.yml` publishes every unpublished public package.
+`apps/shopping-list` (Vue 3.5 via the npm build).
+
+Releasing (ADR-0016): tokens and components are public, with
+independent versions; components lists tokens as an optional peer
+(`^0.1.0`). On every push to `master`, `release.yml` runs
+`changesets/action`: while `.changeset/*.md` files exist it opens or
+updates a "Version Packages" PR; once that PR is merged (no changesets
+left), it runs `changeset publish`, which publishes **every public
+package version not yet on npm**, using OIDC trusted publishing. So
+never merge a "Version Packages" PR for a package that npm doesn't
+trust yet (bootstrap and `npm trust` first, as in #10). Both packages
+sit at the `0.0.0` bootstrap version until the first CI release
+(`0.1.0`, #11).
 
 Commands (run from the repo root):
 

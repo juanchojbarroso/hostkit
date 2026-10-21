@@ -117,3 +117,30 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   two of each. And Vue sets `disabled` as a **property**: with
   `:disabled.attr`, `false` becomes `disabled="false"` and the button
   stays disabled, which the reactive-disabled test catches.
+
+## 2026-10-21 · The Changesets dry runs passed for the wrong reason
+
+- **Tried:** ADR-0016's two dry runs (a tokens-only patch, then a
+  breaking tokens minor) with both packages at the `0.0.0` bootstrap
+  version and components peering on tokens at `^0.1.0`.
+- **Broke, 1:** both passed, but meaninglessly. `0.0.0` doesn't satisfy
+  `^0.1.0`, so Changesets printed "must depend on the current version"
+  and dropped the edge from its dependency graph. Components could never
+  be bumped, whatever tokens did. Rerun from a simulated `0.1.0`, the
+  real behaviour showed: a tokens patch leaves components alone; a tokens
+  minor gives components `0.1.1` with the peer moved to `^0.2.0`.
+- **Broke, 2:** ADR-0016's reason for `onlyUpdatePeerDependentsWhenOutOfRange`
+  is out of date. In `@changesets/cli` 3 (assemble-release-plan 7) an
+  out-of-range peer gives the dependent a *patch*, never a major, with
+  or without the option. The option now only stops Changesets rewriting
+  the peer range when it's still satisfied. Without it, a tokens patch
+  silently changed components' peer to `^0.1.1` without bumping
+  components: an unreleased edit to its `package.json`. So the option is
+  still worth keeping, for a different reason.
+- **Why:** I tested the starting state, not the state the rule is about.
+  And the ADR described the tool's behaviour from older docs, not from
+  the installed source.
+- **Next time:** run a dry run from the state where the rule actually
+  applies, and add a control with the setting off: a check that passes
+  either way proves nothing. When an ADR depends on a tool's behaviour,
+  read that behaviour in the installed version's source.
