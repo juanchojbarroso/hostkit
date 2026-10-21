@@ -32,8 +32,9 @@ Or from a CDN, pinned to an exact version:
 `@hostkit-ui/tokens/tokens.css` is the only public entry point. It
 `@import`s two layer files from `src/`. Those files are internal: their
 names and contents can change in any release, and the package's `exports`
-doesn't expose them to bundlers. On a CDN, the `@import`s cost a couple of
-extra requests, one after the other.
+doesn't expose them to bundlers. On a CDN, the `@import`s cost one extra
+round trip: the browser fetches the layer files only after it has read
+`tokens.css`.
 
 ## Tokens
 

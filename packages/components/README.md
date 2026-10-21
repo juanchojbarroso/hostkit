@@ -30,8 +30,10 @@ npm install @hostkit-ui/components @hostkit-ui/tokens
 dependency: without it the components still work, in the browser's system
 colours (see [Theming](#theming)).
 
-`lit` is a regular dependency (`^3.3.0`). If your app already uses Lit 3,
-your package manager installs one copy for both.
+`lit` is a regular dependency (`^3.3.0`). If your app already uses Lit
+3.3 or later, your package manager installs one copy for both. If your app
+pins an older Lit (for example `3.1.x`), you get a second copy of Lit, and
+no warning.
 
 Import each component once, at your app's entry point, before you render:
 
@@ -93,9 +95,13 @@ pinned to an exact version:
   `cdn/button.js` loads `<hk-button>` only; `cdn/all.js` loads every
   component.
 - Loading both `cdn/button.js` and `cdn/all.js` of the **same** version on
-  one page is safe: the browser loads `button.js` once, so you get one
-  `<hk-button>` and one copy of Lit
+  one page is safe when both come from the same base URL: the browser loads
+  `button.js` once, so you get one `<hk-button>` and one copy of Lit
   ([ADR-0017](https://github.com/juanchojbarroso/hostkit/blob/master/docs/adr/0017-cdn-entries-share-modules-by-url.md)).
+  The browser keys modules by URL, so mixing CDNs (jsDelivr and unpkg), or
+  `@0.1.0` and `@0.1`, loads `button.js` twice, and the second one throws
+  `NotSupportedError`. Every widget on a page should use the same base
+  URL.
 - Two **different** versions on one page are not supported yet. Both try
   to register `<hk-button>`, and the second one throws
   `NotSupportedError`.
@@ -239,7 +245,8 @@ createApp(App).mount('#app');
 
 Don't load `button.js` lazily after mounting. If you do, a button rendered
 with `:disabled="false"` gets the attribute `disabled="false"`, and stays
-disabled after it upgrades.
+disabled after it upgrades. (This was checked by hand; the smoke tests
+don't cover it yet.)
 
 Then use it like any element:
 
@@ -507,12 +514,12 @@ React, Vue and plain-HTML smoke tests on Chromium, Firefox and WebKit.
 CI fails if a built entry is over its gzip budget. The budgets are
 provisional.
 
-| Entry | Budget (gzip) | `0.1.0` (gzip) | Counts |
-|---|---|---|---|
-| `button.js` (npm) | 3 kB | 1.06 kB | the entry and the local modules it imports; not Lit, which your bundler adds once |
-| `all.js` (npm) | 3 kB | 1.07 kB | same |
-| `cdn/button.js` | 12 kB | 6.65 kB | everything, Lit included |
-| `cdn/all.js` | 12 kB | 6.67 kB | everything it loads, Lit included |
+| Entry | Budget (gzip) | Counts |
+|---|---|---|
+| `button.js` (npm) | 3 kB | the entry and the local modules it imports; not Lit, which your bundler adds once |
+| `all.js` (npm) | 3 kB | same |
+| `cdn/button.js` | 12 kB | everything, Lit included |
+| `cdn/all.js` | 12 kB | everything it loads, Lit included |
 
 1 kB = 1000 bytes.
 

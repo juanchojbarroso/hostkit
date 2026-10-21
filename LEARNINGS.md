@@ -231,8 +231,8 @@ Format: date · what I tried · what broke · why · what I'd do next time.
 - **Broke, 1:** all six shopping-list smoke tests still passed. The app
   starts the archive button *disabled*. Vue set it as an attribute on the
   un-upgraded element, any value of which means disabled, so Lit read
-  `true` on upgrade and reflected it back as `disabled=""`. Every later toggle went through the property, because by
-  then the element had one.
+  `true` on upgrade and reflected it back as `disabled=""`. Every later
+  toggle went through the property, because by then the element had one.
 - **Broke, 2:** with the button starting *enabled* (`:disabled="false"`),
   the real bug showed: Vue set `disabled="false"` on the un-upgraded
   element, Lit upgraded it to `disabled = true`, and the button stayed
@@ -246,6 +246,3 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   with the starting state the rule protects (here, a `false` boolean),
   not the app's current one. The smoke suite has no test for this yet;
   it's an open item in the #13 PR.
-- **Also found while documenting:** `el.focus()` on `<hk-button>` does
-  nothing (the host isn't focusable and its shadow root doesn't delegate
-  focus). Tab and clicks work. Reported in the #13 PR, not fixed there.
