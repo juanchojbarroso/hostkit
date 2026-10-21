@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from 'vitest';
+import { afterEach, beforeEach, expect, test } from 'vitest';
 import { commands, userEvent } from 'vitest/browser';
 import axe from 'axe-core';
 import tokensUrl from '@hostkit-ui/tokens/tokens.css?url';
@@ -10,8 +10,13 @@ import type { HkButton } from './button.js';
 const BLUE_700 = 'rgb(29, 78, 216)';
 const BLUE_300 = 'rgb(147, 197, 253)';
 
+// Every test starts from a light OS preference. Without emulation, WebKit
+// follows the machine's own appearance, so a dark Mac fails the light tests.
+beforeEach(async () => {
+  await commands.setColorScheme('light');
+});
+
 afterEach(async () => {
-  await commands.setColorScheme(null);
   document.body.replaceChildren();
   document.head.querySelector('link[data-tokens]')?.remove();
   document.documentElement.removeAttribute('data-theme');
@@ -73,9 +78,11 @@ test('a disabled button fires no click, wherever it is clicked', async () => {
   el.addEventListener('click', () => clicks++);
   query('#row').addEventListener('click', () => clicks++);
 
-  // The centre (the label) and a corner (the padding).
+  // The centre (the label) and the top padding. Not the very corner:
+  // outside the border-radius curve is the row, not the button, and
+  // Firefox hit-tests it that way.
   await userEvent.click(el, { force: true });
-  await userEvent.click(el, { force: true, position: { x: 1, y: 1 } });
+  await userEvent.click(el, { force: true, position: { x: 8, y: 2 } });
   // A script calling click() on the element.
   el.click();
   expect(clicks).toBe(0);
