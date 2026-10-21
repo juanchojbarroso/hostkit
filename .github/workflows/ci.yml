@@ -1,0 +1,78 @@
+name: CI
+
+# The quality gates (issue #7). Runs on every PR and every push to master,
+# and release.yml calls it, so npm only gets a commit that passed them.
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_call:
+
+# The gates only read the repo. When release.yml calls this workflow, its
+# write and id-token permissions don't reach the gate jobs.
+permissions:
+  contents: read
+
+# github.workflow is the caller's name when release.yml calls this, so the
+# group never collides with the caller's own group.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    name: Lint, build, typecheck, size, publint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm lint:lit
+      # Also generates custom-elements.json (cem analyze).
+      - run: pnpm build
+      # After the build: the apps type-check against dist/*.d.ts.
+      - run: pnpm typecheck
+      - run: pnpm size
+      # Packs each package and checks the tarball against package.json.
+      - run: pnpm publint
+
+  test:
+    name: Tests (Chromium, Firefox, WebKit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Read the Playwright version
+        id: playwright
+        run: echo "version=$(pnpm --filter @hostkit-ui/components exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      # Downloads only on a cache miss; the system libraries are always
+      # installed, because the cache holds only the browsers.
+      - run: pnpm --filter @hostkit-ui/components exec playwright install --with-deps chromium firefox webkit
+      # CI=true selects all three engines (ADR-0007): Vitest for the
+      # components, Playwright for the app smoke tests.
+      - run: pnpm test
+      - name: Upload failure screenshots and traces
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-failures
+          path: |
+            packages/components/.vitest/attachments/
+            apps/*/test-results/
+          if-no-files-found: ignore
