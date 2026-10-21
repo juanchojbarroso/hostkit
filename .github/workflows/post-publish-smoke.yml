@@ -16,7 +16,7 @@ on:
         description: 'One version for both packages (0.1.0), or tokens@0.1.0,components@0.2.0. A package left out uses npm latest.'
         required: true
       wait-minutes:
-        description: 'Give up on npm or jsDelivr after this many minutes, per file'
+        description: 'Give up waiting for npm and jsDelivr after this many minutes (all waits together)'
         default: '15'
   workflow_call:
     inputs:

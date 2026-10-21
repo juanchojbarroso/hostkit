@@ -12,14 +12,15 @@
 //
 // Registry mode (issue #12, `pnpm test:registry <versions>`), after a publish:
 //   1. waits until npm and jsDelivr serve the requested versions
-//   2. and 3. as above, but the apps depend on `^<version>` from npm
+//   2. and 3. as above, but the apps depend on `^<version>` from npm (or
+//      exactly <version>, if npm already has a newer match)
 //   4. also checks each installed copy is the requested version, with the
 //      integrity npm reports for it
 //   5. as above; the share widget loads exact-version jsDelivr URLs
 //
 // <versions> is one version for both packages (`0.1.0`) or a list
 // (`tokens@0.1.0,components@0.2.0`); a package left out uses npm's
-// `latest`. HOSTKIT_WAIT_MINUTES bounds each wait (default 15).
+// `latest`. HOSTKIT_WAIT_MINUTES bounds all the waits together (default 15).
 //
 // Run from anywhere. With CI set, Playwright runs Chromium, Firefox and
 // WebKit (ADR-0007), as in the inner loop. On GitHub Actions the script
@@ -49,15 +50,13 @@ const apps = ['share-widget', 'shopping-shell', 'shopping-list'];
 const browsers = process.env.CI ? ['chromium', 'firefox', 'webkit'] : ['chromium'];
 // The files the share widget pages load (index.html, two-widgets.html).
 const cdnFiles = { tokens: ['tokens.css'], components: ['cdn/button.js', 'cdn/all.js'] };
-const waitMinutes = Number(process.env.HOSTKIT_WAIT_MINUTES ?? 15);
 const semver = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
-
-const { values: options } = parseArgs({ options: { registry: { type: 'string' } } });
-const registry = options.registry !== undefined;
-const mode = registry ? 'registry' : 'tarball';
 
 // What the script is doing, so a failure names its app and step.
 let stage = 'setup';
+// When registry mode stops waiting for npm and jsDelivr (one budget for
+// all the waits, so they can't add up past the CI job's timeout).
+let deadline = Infinity;
 
 const inside = (path, dir) => path === dir || path.startsWith(dir + sep);
 
@@ -75,15 +74,15 @@ function fail(message) {
 }
 
 // Calls attempt() until it returns a value other than undefined, with a
-// growing pause, for at most HOSTKIT_WAIT_MINUTES. A brand-new version can
-// take minutes to reach the npm metadata and jsDelivr caches.
-async function retry(what, attempt) {
-  const deadline = Date.now() + waitMinutes * 60_000;
-  for (let pause = 5_000; ; pause = Math.min(pause * 2, 60_000)) {
+// growing pause, until the deadline or after `attempts` tries. A brand-new
+// version can take minutes to reach the npm metadata and jsDelivr caches.
+async function retry(what, attempt, attempts = Infinity) {
+  for (let pause = 5_000, tries = 1; ; pause = Math.min(pause * 2, 60_000), tries++) {
     const result = await attempt();
     if (result !== undefined) return result;
+    if (tries >= attempts) throw new Error(`gave up after ${tries} attempts`);
     if (Date.now() + pause > deadline) {
-      throw new Error(`${what}: gave up after ${waitMinutes} minutes`);
+      throw new Error('gave up: the HOSTKIT_WAIT_MINUTES budget ran out');
     }
     console.log(`  ${what}: not yet, retrying in ${pause / 1000}s`);
     await sleep(pause);
@@ -96,8 +95,24 @@ function npmView(spec) {
     encoding: 'utf8',
   });
   if (result.status !== 0) return undefined;
-  const view = JSON.parse(result.stdout);
-  return view.version ? { version: view.version, integrity: view['dist.integrity'] } : undefined;
+  // A range nothing matches yet can print nothing at all.
+  let view;
+  try {
+    view = JSON.parse(result.stdout);
+  } catch {
+    return undefined;
+  }
+  return view?.version ? { version: view.version, integrity: view['dist.integrity'] } : undefined;
+}
+
+// The highest version npm has for a range, or undefined.
+function npmNewest(range) {
+  const result = spawnSync('npm', ['view', range, 'version', '--json'], { encoding: 'utf8' });
+  try {
+    return [JSON.parse(result.stdout)].flat().at(-1);
+  } catch {
+    return undefined;
+  }
 }
 
 // Reads `0.1.0` or `tokens@0.1.0,components@0.2.0` into { tokens, components };
@@ -109,7 +124,8 @@ async function requestedVersions(spec) {
   } else {
     for (const part of spec.split(',').filter(Boolean)) {
       const [name, version, ...rest] = part.trim().split('@');
-      if (!(name in packages) || !semver.test(version ?? '') || rest.length) {
+      const known = Object.hasOwn(packages, name) && !Object.hasOwn(versions, name);
+      if (!known || !semver.test(version ?? '') || rest.length) {
         throw new Error(`--registry: expected X.Y.Z or tokens@X.Y.Z,components@X.Y.Z, got ${spec}`);
       }
       versions[name] = version;
@@ -128,7 +144,11 @@ const cdnBase = (name, version) => `https://cdn.jsdelivr.net/npm/@hostkit-ui/${n
 
 async function cdnAnswers(url) {
   try {
-    const response = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+    const response = await fetch(url, {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(30_000),
+    });
     return response.ok ? true : undefined;
   } catch {
     return undefined;
@@ -136,6 +156,9 @@ async function cdnAnswers(url) {
 }
 
 async function main() {
+  const { values: options } = parseArgs({ options: { registry: { type: 'string' } } });
+  const registry = options.registry !== undefined;
+  const mode = registry ? 'registry' : 'tarball';
   // GitHub Actions gets a fixed directory, so the workflow can upload test
   // results from it; the script owns it and empties it first. Anywhere
   // else, a fresh temporary directory per run, never deleted for you.
@@ -159,6 +182,11 @@ async function main() {
   if (registry) {
     // 1. Wait for npm, then for jsDelivr.
     stage = 'resolve versions';
+    const waitMinutes = Number(process.env.HOSTKIT_WAIT_MINUTES || 15);
+    if (!(waitMinutes > 0)) {
+      throw new Error(`HOSTKIT_WAIT_MINUTES must be a positive number of minutes`);
+    }
+    deadline = Date.now() + waitMinutes * 60_000;
     const versions = await requestedVersions(options.registry);
     for (const [name, version] of Object.entries(versions)) {
       stage = `wait for npm: @hostkit-ui/${name}@${version}`;
@@ -166,7 +194,12 @@ async function main() {
       if (view.version !== version) {
         throw new Error(`npm answered @hostkit-ui/${name}@${view.version}, not ${version}`);
       }
-      specs[name] = `^${version}`;
+      // A consumer writes `^x.y.z`. If npm already has a newer match (a
+      // manual run for an older release), pin the exact version instead,
+      // so the run tests the version it was asked for.
+      const newest = npmNewest(`@hostkit-ui/${name}@^${version}`);
+      specs[name] = newest === version ? `^${version}` : version;
+      if (newest !== version) console.log(`npm: ^${version} matches ${newest}; pinning ${version}`);
       expected[name] = view;
       console.log(`npm: @hostkit-ui/${name}@${version} (${view.integrity})`);
     }
@@ -238,19 +271,24 @@ async function main() {
     }
     await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
     // No lockfile exists out here: resolve fresh, as a new consumer would.
-    // npm's metadata can still lag behind `npm view` right after a publish.
+    // npm's metadata can still lag behind `npm view` right after a publish,
+    // so registry mode tries three times; more failures are a real problem.
     const install = () => run('pnpm', ['install', '--no-frozen-lockfile'], { cwd: dest });
     if (!registry) install();
     else {
-      await retry(stage, () => {
-        try {
-          install();
-          return true;
-        } catch (error) {
-          console.log(`  ${error.message}`);
-          return undefined;
-        }
-      });
+      await retry(
+        stage,
+        () => {
+          try {
+            install();
+            return true;
+          } catch (error) {
+            console.log(`  ${error.message}`);
+            return undefined;
+          }
+        },
+        3,
+      );
     }
   }
 
@@ -270,15 +308,17 @@ async function main() {
         fail(`${app} resolves @hostkit-ui/${name} outside its copy: ${real}`);
       const installed = await readFile(join(real, 'package.json'), 'utf8');
       if (registry) {
-        // `^x.y.z` takes a newer x.y patch if one exists; this run tests
-        // the exact version it was asked for.
+        // `^x.y.z` could still pick a version published since step 1.
         const { version, integrity } = expected[name];
         const got = JSON.parse(installed).version;
         if (got !== version) {
-          fail(`${app} installed @hostkit-ui/${name}@${got}, not ${version} (a newer match?)`);
+          fail(`${app} installed @hostkit-ui/${name}@${got}, not ${version} `);
         }
         // pnpm records where each package came from. A registry package
-        // has only an integrity; a tarball or link would have a path.
+        // has only an integrity; a tarball or link would have a path. This
+        // matches the lockfile v9 layout (pnpm 10). If a pnpm major changes
+        // it, the check fails closed (a false red): update the pattern,
+        // don't loosen it.
         const entry = lockfile.match(
           new RegExp(`\\n  '@hostkit-ui/${name}@${version.replace(/\./g, '\\.')}':\\n(.+)`),
         )?.[1];
@@ -331,7 +371,7 @@ async function main() {
 try {
   await main();
 } catch (error) {
-  console.error(`\nSmoke tests failed at "${stage}": ${error.message}`);
+  console.error(`\nSmoke tests failed at "${stage}":`, error);
   if (process.env.GITHUB_OUTPUT) {
     await appendFile(process.env.GITHUB_OUTPUT, `failed-stage=${stage.replace(/\n/g, ' ')}\n`);
   }

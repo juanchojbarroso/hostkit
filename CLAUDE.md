@@ -102,12 +102,12 @@ Commands (run from the repo root):
   same apps and specs against a **released** version. `<versions>` is
   `0.1.0` (both packages) or `tokens@0.1.0,components@0.2.0` (a package
   left out uses npm `latest`). Waits until npm and jsDelivr serve the
-  version (`HOSTKIT_WAIT_MINUTES`, default 15, per file), installs
-  `^<version>` from npm into the React and Vue copies, fails unless each
-  installed copy is exactly that version with npm's integrity in the
-  lockfile, and points the share widget at exact-version jsDelivr URLs
-  (local mounts point nowhere, so a fallback 404s). A newer matching
-  patch on npm makes it fail, by design
+  version (`HOSTKIT_WAIT_MINUTES`, default 15, one budget for all the
+  waits), installs `^<version>` from npm (exactly `<version>` if npm
+  already has a newer match), fails unless each installed copy is
+  exactly that version with npm's integrity in the lockfile, and points
+  the share widget at exact-version jsDelivr URLs (local mounts point
+  nowhere, so a fallback 404s). Proposed in ADR-0018
 
 **CI** (`.github/workflows/ci.yml`) runs on every PR and push to
 `master`. Job `checks`: lint, format check, lit-analyzer, build (which

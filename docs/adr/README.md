@@ -24,3 +24,4 @@ supersede it with a new one.
 | [0015](0015-supported-frameworks-browsers-and-lit-dependency.md) | Supported frameworks, browsers and the Lit dependency | accepted |
 | [0016](0016-publish-from-ci-with-npm-trusted-publishing.md) | Publish from CI with npm trusted publishing, independent versions | accepted |
 | [0017](0017-cdn-entries-share-modules-by-url.md) | CDN entries share modules by URL | accepted |
+| [0018](0018-smoke-test-every-release-from-npm-and-jsdelivr.md) | Smoke-test every release from npm and jsDelivr, in a workflow that can't publish | proposed |
