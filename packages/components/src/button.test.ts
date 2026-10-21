@@ -3,6 +3,7 @@ import { commands, userEvent } from 'vitest/browser';
 import axe from 'axe-core';
 import tokensUrl from '@hostkit-ui/tokens/tokens.css?url';
 import './button.js';
+import type { HkButton } from './button.js';
 
 // Palette values from @hostkit-ui/tokens, written out by hand so the tests
 // don't recompute what the CSS does.
@@ -26,9 +27,16 @@ async function loadTokens() {
   await loaded;
 }
 
+// querySelector, but a missing element fails the test here, not later.
+function query<E extends Element>(selector: string): E {
+  const el = document.querySelector<E>(selector);
+  if (!el) throw new Error(`No element matches ${selector}`);
+  return el;
+}
+
 async function render(markup: string) {
   document.body.innerHTML = markup;
-  const el = document.body.querySelector('hk-button')!;
+  const el = query<HkButton>('hk-button');
   await el.updateComplete;
   return el;
 }
@@ -58,12 +66,12 @@ test('a disabled button fires no click, wherever it is clicked', async () => {
   // A clickable parent, like a list row: it must not receive the click
   // either, the same as with a native disabled <button>.
   document.body.innerHTML = '<div id="row"><hk-button disabled>Save</hk-button></div>';
-  const el = document.body.querySelector('hk-button')!;
+  const el = query<HkButton>('hk-button');
   await el.updateComplete;
   expect(el.disabled).toBe(true);
   let clicks = 0;
   el.addEventListener('click', () => clicks++);
-  document.querySelector('#row')!.addEventListener('click', () => clicks++);
+  query('#row').addEventListener('click', () => clicks++);
 
   // The centre (the label) and a corner (the padding).
   await userEvent.click(el, { force: true });
@@ -75,9 +83,9 @@ test('a disabled button fires no click, wherever it is clicked', async () => {
 
 test('a disabled button leaves the tab order, and comes back when re-enabled', async () => {
   document.body.innerHTML = '<input id="before" /><hk-button>Save</hk-button><input id="after" />';
-  const el = document.body.querySelector('hk-button')!;
+  const el = query<HkButton>('hk-button');
   await el.updateComplete;
-  const before = document.querySelector<HTMLInputElement>('#before')!;
+  const before = query<HTMLInputElement>('#before');
 
   before.focus();
   await userEvent.tab();
