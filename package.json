@@ -15,7 +15,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "size": "pnpm --filter @hostkit-ui/components size",
-    "publint": "publint packages/components && publint packages/tokens",
+    "publint": "publint packages/components && publint packages/tokens && publint packages/release-probe",
     "changeset": "changeset",
     "release": "changeset publish"
   },

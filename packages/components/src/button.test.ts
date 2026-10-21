@@ -16,7 +16,9 @@ beforeEach(async () => {
   await commands.setColorScheme('light');
 });
 
+// Also clear it afterwards, so a later test file doesn't inherit `dark`.
 afterEach(async () => {
+  await commands.setColorScheme(null);
   document.body.replaceChildren();
   document.head.querySelector('link[data-tokens]')?.remove();
   document.documentElement.removeAttribute('data-theme');
