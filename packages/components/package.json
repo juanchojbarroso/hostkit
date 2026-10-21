@@ -32,7 +32,8 @@
     "build:dist": "node scripts/build-dist.mjs && tsc -p tsconfig.build.json && cem analyze",
     "build:cdn": "node scripts/build-cdn.mjs",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "size": "node scripts/check-size.mjs"
   },
   "dependencies": {
     "lit": "^3.3.0"
