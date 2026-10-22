@@ -42,6 +42,34 @@ jobs:
       # Packs each package and checks the tarball against package.json.
       - run: pnpm publint
 
+  # Issue #29: a PR may not change a published package's version by hand,
+  # because `changeset publish` would release it on merge with no changeset.
+  # The unit tests run on every event; the check itself only on a PR (a push
+  # to master, including release.yml's gates, has no base to compare with).
+  versions:
+    name: Versions come from changesets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # No pnpm here: Node built-ins only. setup-node@v5 caches for the
+      # packageManager field by default, which fails without pnpm.
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - run: node --test 'scripts/*.test.mjs'
+      - name: Compare published versions with the PR's base
+        if: github.event_name == 'pull_request'
+        # Untrusted values (the head branch name) go through env, never
+        # straight into the script.
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_REF: ${{ github.head_ref }}
+          FROM_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          node scripts/check-version-bumps.mjs
+
   test:
     name: Tests (Chromium, Firefox, WebKit)
     runs-on: ubuntu-latest

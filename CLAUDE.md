@@ -79,7 +79,9 @@ Commands (run from the repo root):
   "Failed to resolve component" warning in development
 - `pnpm --filter shopping-list typecheck`: `vue-tsc`, on TypeScript 5.9
   (vue-tsc needs the compiler API, which the TypeScript 7 package lacks)
-- `pnpm changeset`: add a changeset (see `.changeset/README.md`)
+- `pnpm changeset`: add a changeset (see `.changeset/README.md`). Never
+  edit a published package's `version` by hand: CI job `versions` fails
+- `pnpm test:scripts`: `node --test` on `scripts/*.test.mjs`
 - `pnpm lint`: ESLint; `pnpm lint:lit`: lit-analyzer on the component
   templates (strict, warnings fail)
 - `pnpm format` / `pnpm format:check`: Prettier (Markdown is excluded,
@@ -114,9 +116,18 @@ Commands (run from the repo root):
 generates `custom-elements.json`), typecheck, size, publint. Job `test`:
 `pnpm test` with `CI` set, so Vitest and Playwright run Chromium,
 Firefox and WebKit (browsers cached). Job `tarball`: `pnpm test:tarball`
-on three engines, working in `$RUNNER_TEMP/hostkit-tarball`.
+on three engines, working in `$RUNNER_TEMP/hostkit-tarball`. Job
+`versions` (#29, enforces ADR-0012 and ADR-0016): on a PR,
+`scripts/check-version-bumps.mjs` compares the `version` of tokens and
+components between the PR's base and head, and fails if either changed,
+pointing at `pnpm changeset`. Only the Version Packages PR (branch
+`changeset-release/master`, not from a fork) may change them; other
+`package.json` fields may change freely. On a push (including
+`release.yml`'s gates) it runs only the script's tests
+(`pnpm test:scripts`, `node --test`). It matters because
+`changeset publish` publishes any version npm lacks, changeset or not.
 `release.yml` calls `ci.yml` as a reusable workflow (`gates`, which
-includes all three jobs) and publishes only after it passes on the same commit.
+includes all four jobs) and publishes only after it passes on the same commit.
 Keep publishing in `release.yml`: npm trusts that file name (ADR-0016).
 After a publish (`changesets/action` output `published == 'true'`), its
 `post-publish` job calls `post-publish-smoke.yml` with the tokens and
