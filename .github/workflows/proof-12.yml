@@ -1,6 +1,7 @@
 # TEMPORARY (issue #12): proves post-publish-smoke.yml on this branch,
 # through workflow_call as release.yml uses it, before the file is on
 # master (workflow_dispatch needs it there). Deleted before merge.
+# Second run: after the review fixes.
 name: Proof for 12
 
 on:
