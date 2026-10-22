@@ -23,6 +23,10 @@ jobs:
       contents: write
       pull-requests: write
       id-token: write # npm trusted publishing (ADR-0016)
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      # tokens@0.1.0,components@0.2.0: only the packages just published.
+      versions: ${{ steps.versions.outputs.versions }}
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v6
@@ -34,7 +38,32 @@ jobs:
       # Published files (dist/, cdn/, custom-elements.json) are gitignored.
       - run: pnpm build
       - uses: changesets/action@v2
+        id: changesets
         with:
           publish-script: pnpm release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # publishedPackages is [{"name": "@hostkit-ui/tokens", "version": "0.1.0"}, …].
+      - name: Read the published versions
+        id: versions
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          PUBLISHED: ${{ steps.changesets.outputs.publishedPackages }}
+        run: |
+          versions=$(jq -r '[.[] | select(.name == "@hostkit-ui/tokens" or .name == "@hostkit-ui/components")
+            | "\(.name | ltrimstr("@hostkit-ui/"))@\(.version)"] | join(",")' <<< "$PUBLISHED")
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
+
+  # Issue #12: the versions just published, installed from npm and loaded
+  # from jsDelivr, pass the apps' smoke tests. A failure opens an issue.
+  # It lives in its own workflow file, so it never gets id-token: write
+  # and a manual run can't reach the publish step.
+  post-publish:
+    needs: release
+    if: needs.release.outputs.published == 'true' && needs.release.outputs.versions != ''
+    uses: ./.github/workflows/post-publish-smoke.yml
+    with:
+      version: ${{ needs.release.outputs.versions }}
+    permissions:
+      contents: read
+      issues: write

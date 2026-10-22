@@ -10,6 +10,7 @@
     "build": "pnpm -r build",
     "test": "pnpm -r --workspace-concurrency=1 test",
     "test:tarball": "node scripts/tarball-smoke.mjs",
+    "test:registry": "node scripts/tarball-smoke.mjs --registry",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "lint:lit": "lit-analyzer packages/components/src --strict --maxWarnings 0",
