@@ -67,6 +67,8 @@ test('an enabled button fires click when the user clicks it', async () => {
 
   await userEvent.click(el);
   expect(clicks).toBe(1);
+  await userEvent.click(el, { position: { x: 8, y: 2 } });
+  expect(clicks).toBe(2);
 });
 
 test('a disabled button fires no click, wherever it is clicked', async () => {
@@ -88,6 +90,70 @@ test('a disabled button fires no click, wherever it is clicked', async () => {
   // A script calling click() on the element.
   el.click();
   expect(clicks).toBe(0);
+});
+
+test.each(['{Enter}', ' '])(
+  'focus() supports keyboard activation with %s and ignores disabled buttons',
+  async (key) => {
+    const el = await render('<input id="before" /><hk-button>Save</hk-button>');
+    const before = query<HTMLInputElement>('#before');
+    let clicks = 0;
+    el.addEventListener('click', () => clicks++);
+
+    before.focus();
+    el.focus();
+    expect(document.activeElement).toBe(el);
+    expect(el.shadowRoot?.activeElement).toBe(el.shadowRoot?.querySelector('button'));
+    await userEvent.keyboard(key);
+    expect(clicks).toBe(1);
+
+    el.disabled = true;
+    await el.updateComplete;
+    before.focus();
+    el.focus();
+    expect(document.activeElement).toBe(before);
+    expect(clicks).toBe(1);
+  },
+);
+
+test('focus() before the first render does not throw or take focus', () => {
+  const el = document.createElement('hk-button');
+  const active = document.activeElement;
+  expect(() => el.focus()).not.toThrow();
+  expect(document.activeElement).toBe(active);
+});
+
+test('focus() respects preventScroll', async () => {
+  const el = await render(
+    '<input id="before" /><div id="scroller" style="height: 80px; overflow: auto">' +
+      '<div style="height: 1000px"></div><hk-button>Save</hk-button></div>',
+  );
+  const scroller = query<HTMLDivElement>('#scroller');
+  const before = query<HTMLInputElement>('#before');
+  before.focus();
+  el.focus({ preventScroll: true });
+  expect(document.activeElement).toBe(el);
+  await new Promise(requestAnimationFrame);
+  expect(scroller.scrollTop).toBe(0);
+
+  before.focus();
+  el.focus();
+  await expect.poll(() => scroller.scrollTop).toBeGreaterThan(0);
+});
+
+test('host focus selectors keep their keyboard and pointer behavior', async () => {
+  const el = await render('<input id="before" /><hk-button>Save</hk-button>');
+  const state = () => ({ focus: el.matches(':focus'), visible: el.matches(':focus-visible') });
+  query<HTMLInputElement>('#before').focus();
+  await userEvent.tab();
+  expect(state()).toEqual({ focus: true, visible: false });
+  // WebKit does not focus native buttons on a pointer click.
+  const pointerFocus =
+    !navigator.userAgent.includes('AppleWebKit') || navigator.userAgent.includes('Chrome');
+  await userEvent.click(el);
+  expect(state()).toEqual({ focus: pointerFocus, visible: false });
+  await userEvent.click(el, { position: { x: 8, y: 2 } });
+  expect(state()).toEqual({ focus: pointerFocus, visible: false });
 });
 
 test('a disabled button leaves the tab order, and comes back when re-enabled', async () => {

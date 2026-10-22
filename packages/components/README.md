@@ -407,8 +407,8 @@ If a capture-phase listener must ignore disabled buttons, check the target:
 Tab reaches `<hk-button>` like a native button, and keyboard focus shows
 an outline in `--hk-button-focus-ring`.
 
-**Known limitation:** calling `focus()` on the element (`el.focus()`)
-does nothing in `0.1.0`: focus stays where it was.
+Calling `el.focus()` moves focus to the button unless it is disabled.
+It accepts the native `FocusOptions`, such as `el.focus({ preventScroll: true })`.
 
 ### Custom properties
 
