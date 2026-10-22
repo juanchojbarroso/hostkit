@@ -407,8 +407,14 @@ If a capture-phase listener must ignore disabled buttons, check the target:
 Tab reaches `<hk-button>` like a native button, and keyboard focus shows
 an outline in `--hk-button-focus-ring`.
 
-**Known limitation:** calling `focus()` on the element (`el.focus()`)
-does nothing in `0.1.0`: focus stays where it was.
+`el.focus()` focuses the button, as on a native button (for example, to
+return focus to the button that opened a dialog). On a disabled button
+it does nothing. (In `0.1.0`, `focus()` did nothing at all.)
+
+While the button has focus, `document.activeElement` is the
+`<hk-button>`, and `hk-button:focus` matches. `hk-button:focus-visible`
+never matches, even for keyboard focus; the focus ring is drawn inside
+the component.
 
 ### Custom properties
 

@@ -113,6 +113,60 @@ test('a disabled button leaves the tab order, and comes back when re-enabled', a
   expect(document.activeElement).toBe(el);
 });
 
+// What a consumer's `hk-button:focus` / `hk-button:focus-visible` CSS sees.
+function focusState(el: Element) {
+  return {
+    active: document.activeElement === el,
+    focus: el.matches(':focus'),
+    focusVisible: el.matches(':focus-visible'),
+  };
+}
+
+test('focus() focuses the button, and Enter and Space then click it', async () => {
+  const el = await render('<hk-button>Save</hk-button>');
+  let clicks = 0;
+  el.addEventListener('click', () => clicks++);
+
+  el.focus();
+  expect(focusState(el)).toEqual({ active: true, focus: true, focusVisible: false });
+
+  await userEvent.keyboard('{Enter}');
+  await userEvent.keyboard(' ');
+  expect(clicks).toBe(2);
+});
+
+// Pins what `hk-button:focus` and `hk-button:focus-visible` match, so a
+// change to how focus works (#28) can't silently change consumers' CSS.
+test('Tab and pointer clicks: the host matches :focus but never :focus-visible', async () => {
+  document.body.innerHTML = '<input id="before" /><hk-button>Save</hk-button>';
+  const el = query<HkButton>('hk-button');
+  await el.updateComplete;
+  let clicks = 0;
+  el.addEventListener('click', () => clicks++);
+
+  query<HTMLInputElement>('#before').focus();
+  await userEvent.tab();
+  expect(focusState(el)).toEqual({ active: true, focus: true, focusVisible: false });
+
+  // The centre and the top padding (see the disabled test for why not the
+  // very corner). Whether a click focuses a button is the engine's choice
+  // (Safari on macOS doesn't), so only check that the selectors agree with it.
+  for (const position of [undefined, { x: 8, y: 2 }]) {
+    query<HTMLInputElement>('#before').focus();
+    await userEvent.click(el, { position });
+    const state = focusState(el);
+    expect(state).toEqual({ active: state.active, focus: state.active, focusVisible: false });
+  }
+  expect(clicks).toBe(2);
+});
+
+test('focus() does not focus a disabled button', async () => {
+  const el = await render('<hk-button disabled>Save</hk-button>');
+
+  el.focus();
+  expect(focusState(el)).toEqual({ active: false, focus: false, focusVisible: false });
+});
+
 test('with the tokens loaded, the light theme is the default', async () => {
   await loadTokens();
   const el = await render('<hk-button>Save</hk-button>');

@@ -14,6 +14,15 @@ import { customElement, property } from 'lit/decorators.js';
  */
 @customElement('hk-button')
 export class HkButton extends LitElement {
+  // focus() on the host moves focus to the inner <button>, like a native
+  // button. The host itself never becomes focusable, so the Tab order and
+  // which selectors match (`:focus` yes, `:focus-visible` no) stay as
+  // they were when Tab or a click focused the inner button.
+  static shadowRootOptions: ShadowRootInit = {
+    ...LitElement.shadowRootOptions,
+    delegatesFocus: true,
+  };
+
   static styles = css`
     :host {
       --_bg: var(--hk-color-action-primary, ButtonFace);
