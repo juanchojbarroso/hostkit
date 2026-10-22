@@ -270,3 +270,20 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   whole, and across that range the file hadn't changed.
 - **Next time:** a `paths` filter sees the net diff of a push, not each
   commit. To re-trigger, change the file's content.
+
+## 2026-10-22 · setup-node wants pnpm even when the job doesn't
+
+- **Tried:** a light CI job for the version-bump guard (#29):
+  `actions/checkout`, `actions/setup-node@v5` with `node-version-file`,
+  then plain `node`, with no `pnpm/action-setup`, since the script uses
+  only Node built-ins.
+- **Broke:** the job failed in setup-node with `Unable to locate
+  executable file: pnpm`, before the script ran.
+- **Why:** setup-node v5 turns on dependency caching by itself when
+  `package.json` has a `packageManager` field (`package-manager-cache`
+  defaults to `true`). Ours names pnpm, so it calls pnpm to find the
+  store, and pnpm isn't installed in that job.
+- **Next time:** a job that doesn't install dependencies sets
+  `package-manager-cache: false`. Defaults that read the repo change
+  between majors of an action; read the action's inputs on a bump, and
+  push a new job early to see it fail on a real runner.
