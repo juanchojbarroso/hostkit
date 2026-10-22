@@ -84,6 +84,12 @@ export class HkButton extends LitElement {
     );
   }
 
+  /** Moves focus to the button unless it is disabled. */
+  override focus(options?: FocusOptions): void {
+    if (this.disabled) return;
+    this.renderRoot?.querySelector<HTMLButtonElement>('button')?.focus(options);
+  }
+
   render() {
     return html`<button type="button" ?disabled=${this.disabled}><slot></slot></button>`;
   }

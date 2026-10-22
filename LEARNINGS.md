@@ -5,6 +5,21 @@ Things that **broke**, and what they taught. (Things we *chose* live in
 
 Format: date · what I tried · what broke · why · what I'd do next time.
 
+## 2026-10-22 · A custom button needs to forward programmatic focus
+
+- **Tried:** `el.focus()` on a rendered `<hk-button>`, then Enter or Space.
+- **Broke:** focus stayed on the previous input in Chromium, Firefox and WebKit.
+- **Why:** the host is not focusable, and its shadow root does not delegate focus.
+  The native button inside the shadow root can receive focus directly.
+- **Next time:** test programmatic focus alongside Tab and pointer interaction.
+  Forwarding `focus(options)` to the native button preserves the existing shadow-root
+  behavior. The host matches `:focus` after Tab in all three engines. After a
+  pointer click, it matches in Chromium and Firefox but not WebKit. The host does
+  not match `:focus-visible` in those paths. Keep these differences covered so a
+  focus fix does not change consumers' CSS selectors. Guard the render root as
+  well: Lit creates it on the first connection, so an earlier `focus()` call
+  should remain a no-op rather than throw.
+
 ## 2026-10-18 · Name collisions, twice
 
 - **Tried:** `basket-ui` (npm package), then the `@hostkit` npm org.
