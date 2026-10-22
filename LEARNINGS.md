@@ -270,3 +270,36 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   whole, and across that range the file hadn't changed.
 - **Next time:** a `paths` filter sees the net diff of a push, not each
   commit. To re-trigger, change the file's content.
+
+## 2026-10-22 · `focus()` on `hk-button` did nothing, and the tests never called it
+
+- **Tried:** shipping `hk-button` `0.1.0` with tests for Tab, pointer
+  clicks and `click()`, but none that called `el.focus()` (#28).
+- **Broke:** `el.focus()` did nothing on Chromium, Firefox and WebKit.
+  Focus stayed where it was, so "return focus to the trigger after
+  closing a dialog" silently failed. It was found by writing the consumer
+  README (#13), not by a test.
+- **Why:** the host has no `tabindex` and its shadow root didn't delegate
+  focus, so the host isn't focusable; only the inner `<button>` is. Tab
+  and clicks reach the inner button directly, so they worked and hid the
+  gap. The fix is `delegatesFocus: true` on the shadow root.
+- **What I checked before calling it a patch:** a throwaway probe
+  recorded `document.activeElement`, `:focus`, `:focus-visible` and
+  `:focus-within` on the host for Tab, centre and corner clicks,
+  `el.focus()`, inner `button.focus()` and the disabled cases, on all
+  three engines, before and after the change. Every case that already
+  focused the button matched the same selectors as before; the host
+  matches `:focus` and **never** `:focus-visible` (even after Tab), on
+  every engine. `el.focus()` now reaches the same state as focusing the
+  inner button did. The obvious alternative, `tabindex="0"` on the host,
+  would have made the host match `:focus-visible` after Tab (a change a
+  consumer's CSS could see) and let `focus()` focus a disabled button:
+  the new tests fail on it.
+- **Also:** on macOS with keyboard navigation off, local WebKit skips
+  buttons on Tab, so the two Tab tests fail locally there (the existing
+  one too, on `master`); Linux CI is the WebKit evidence for Tab.
+- **Next time:** test every way a user or a script can reach a control:
+  Tab, pointer, `click()` and `focus()`. Before a "nothing else changes"
+  patch, probe the observable state (selectors, `activeElement`) per
+  engine before and after, then keep the probe's findings as a guard
+  test.
