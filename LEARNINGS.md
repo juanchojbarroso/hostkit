@@ -264,3 +264,9 @@ Format: date · what I tried · what broke · why · what I'd do next time.
   also tests the `workflow_call` path the real caller (`release.yml`)
   uses. Delete the temporary file before merge, and keep the run URLs
   as evidence.
+- **Broke again:** the second proof run never started. I had deleted
+  the temporary file and re-added it in two local commits, then pushed
+  both at once. GitHub's `paths` filter compares the pushed range as a
+  whole, and across that range the file hadn't changed.
+- **Next time:** a `paths` filter sees the net diff of a push, not each
+  commit. To re-trigger, change the file's content.
